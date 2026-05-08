@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⚔ Minecraft War Room — Command Center</title>
+<title>⚔ War Room — Tactical Command Center</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
@@ -14,169 +15,478 @@
   --amber:#ffb300;--red:#ff3c3c;--blue:#00bfff;--purple:#bf80ff;
   --bg:#0a0f0a;--bg2:#0f160f;--bg3:#141e14;--border:#1f3d1f;--border2:#2a5a2a;
 }
-html,body{min-height:100vh;background:var(--bg);font-family:'Exo 2',sans-serif;color:#c8e6c8;font-size:13px;line-height:1.4}
-body{padding:16px}
-.war-room{max-width:900px;margin:0 auto;background:var(--bg);border:1px solid var(--border2);border-radius:8px;overflow:hidden;position:relative}
+html,body{min-height:100vh;background:radial-gradient(ellipse 120% 80% at 50% -20%,rgba(57,255,20,0.06),transparent 50%),var(--bg);font-family:'Exo 2',sans-serif;color:#c8e6c8;font-size:15px;line-height:1.5}
+body{padding:20px}
+.war-room{max-width:1200px;margin:0 auto;background:var(--bg);border:1px solid var(--border2);border-radius:10px;overflow:hidden;position:relative;box-shadow:0 0 0 1px rgba(57,255,20,0.08),0 24px 48px rgba(0,0,0,0.45),0 0 80px rgba(57,255,20,0.04)}
 .war-room::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.06) 2px,rgba(0,0,0,0.06) 4px);pointer-events:none;z-index:0}
 .war-room>*{position:relative;z-index:1}
-.header{background:var(--bg2);border-bottom:1px solid var(--border2);padding:14px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.header-logo{font-family:'Share Tech Mono',monospace;color:var(--green);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px}
-.header-title{font-family:'Exo 2',sans-serif;font-size:22px;font-weight:700;color:var(--green);letter-spacing:1px;text-transform:uppercase}
-.header-status{display:flex;gap:10px;align-items:center;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--green-dim);margin-left:auto;flex-wrap:wrap}
+.header{background:var(--bg2);border-bottom:1px solid var(--border2);padding:20px 28px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.header-logo{font-family:'Share Tech Mono',monospace;color:var(--green);font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-bottom:3px}
+.header-title{font-family:'Exo 2',sans-serif;font-size:28px;font-weight:700;color:var(--green);letter-spacing:1px;text-transform:uppercase;text-shadow:0 0 24px rgba(57,255,20,0.25)}
+.header-status{display:flex;gap:12px;align-items:center;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--green-dim);margin-left:auto;flex-wrap:wrap}
+.header-clock{color:#6db86d;font-variant-numeric:tabular-nums}
+.cloud-pill{font-size:10px;padding:4px 10px;border-radius:3px;letter-spacing:1px;border:1px solid var(--border2)}
+.cloud-pill-local{color:#7a9a7a;background:rgba(0,0,0,0.25)}
+.cloud-pill-ok{color:var(--green);border-color:var(--green-muted);background:rgba(57,255,20,0.08);box-shadow:0 0 12px rgba(57,255,20,0.15)}
+.cloud-pill-bad{color:var(--red);border-color:rgba(255,60,60,0.4);background:rgba(255,60,60,0.08)}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 1.5s infinite;display:inline-block;flex-shrink:0}
 .dot.amber{background:var(--amber);animation-delay:.5s}
 .dot.red{background:var(--red);animation-duration:1s}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
 .tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
-.tab{padding:10px 18px;font-family:'Share Tech Mono',monospace;font-size:11px;cursor:pointer;color:var(--green-dim);border-right:1px solid var(--border);text-transform:uppercase;letter-spacing:1px;transition:all .2s;white-space:nowrap;position:relative;flex-shrink:0}
+.tab{padding:13px 22px;font-family:'Share Tech Mono',monospace;font-size:12px;cursor:pointer;color:var(--green-dim);border-right:1px solid var(--border);text-transform:uppercase;letter-spacing:1px;transition:all .2s;white-space:nowrap;position:relative;flex-shrink:0}
 .tab.active{color:var(--green);background:var(--bg3)}
 .tab.active::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--green)}
 .tab:hover:not(.active){color:#6db86d;background:rgba(57,255,20,0.04)}
-.content{padding:16px}
+.content{padding:22px}
 .panel{display:none}.panel.active{display:block}
-.section-header{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--green-dim);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px}
-.section-header i{font-size:13px;color:var(--green)}
-.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:12px}
-.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:12px}
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:12px}
+.section-header{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--green-dim);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px}
+.section-header i{font-size:14px;color:var(--green)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:14px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:14px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:16px}
 .card-accent-green{border-left:3px solid var(--green)}
 .card-accent-amber{border-left:3px solid var(--amber)}
 .card-accent-red{border-left:3px solid var(--red)}
 .card-accent-blue{border-left:3px solid var(--blue)}
 .card-accent-purple{border-left:3px solid var(--purple)}
-.kpi-label{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--green-dim);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px}
-.kpi-value{font-size:24px;font-weight:700;color:var(--green);font-family:'Exo 2',sans-serif;line-height:1}
-.kpi-sub{font-size:11px;color:#5a8a5a;margin-top:3px}
-.role-card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:12px;margin-bottom:8px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start}
-.role-icon{width:40px;height:40px;border-radius:4px;background:rgba(57,255,20,0.07);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.role-name{font-weight:700;font-size:14px;color:var(--green);margin-bottom:2px}
-.role-player{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--amber);margin-bottom:5px}
-.role-task{font-size:11px;color:#8ab88a;line-height:1.6}
-.status-badge{font-family:'Share Tech Mono',monospace;font-size:9px;padding:3px 8px;border-radius:2px;text-transform:uppercase;letter-spacing:1px;height:fit-content;white-space:nowrap}
+.kpi-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--green-dim);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px}
+.kpi-value{font-size:28px;font-weight:700;color:var(--green);font-family:'Exo 2',sans-serif;line-height:1}
+.kpi-sub{font-size:12px;color:#5a8a5a;margin-top:4px}
+.role-card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:16px;margin-bottom:10px;display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:start}
+.role-icon{width:48px;height:48px;border-radius:4px;background:rgba(57,255,20,0.07);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.role-name{font-weight:700;font-size:16px;color:var(--green);margin-bottom:3px}
+.role-player{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--amber);margin-bottom:6px}
+.role-task{font-size:13px;color:#8ab88a;line-height:1.6}
+.status-badge{font-family:'Share Tech Mono',monospace;font-size:10px;padding:3px 10px;border-radius:2px;text-transform:uppercase;letter-spacing:1px;height:fit-content;white-space:nowrap}
 .badge-active{background:rgba(57,255,20,0.1);color:var(--green);border:1px solid var(--green-muted)}
 .badge-idle{background:rgba(255,179,0,0.1);color:var(--amber);border:1px solid rgba(255,179,0,0.3)}
 .badge-offline{background:rgba(255,60,60,0.1);color:var(--red);border:1px solid rgba(255,60,60,0.3)}
 .tbl-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:12px;min-width:500px}
-th{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--green-dim);text-transform:uppercase;letter-spacing:1px;text-align:left;padding:7px 10px;border-bottom:1px solid var(--border);background:var(--bg)}
-td{padding:7px 10px;border-bottom:1px solid var(--border);color:#a0c8a0}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:500px}
+th{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--green-dim);text-transform:uppercase;letter-spacing:1px;text-align:left;padding:9px 12px;border-bottom:1px solid var(--border);background:var(--bg)}
+td{padding:9px 12px;border-bottom:1px solid var(--border);color:#a0c8a0}
 tr:hover td{background:rgba(57,255,20,0.03)}
-.coord{font-family:'Share Tech Mono',monospace;color:var(--blue);font-size:11px}
+.coord{font-family:'Share Tech Mono',monospace;color:var(--blue);font-size:12px}
 .tier-bar{height:7px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:6px}
 .tier-fill{height:100%;background:linear-gradient(90deg,var(--green-dark),var(--green));border-radius:3px}
-.req-item{background:rgba(57,255,20,0.04);border:1px solid var(--border);border-radius:4px;padding:9px 12px;margin-bottom:7px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.req-need{font-weight:600;color:#c8e6c8;font-size:12px;flex:1;min-width:120px}
-.req-offer{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--amber)}
-.req-who{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--green-dim);white-space:nowrap}
-.remove-btn{background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0}
-.obj-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.req-item{background:rgba(57,255,20,0.04);border:1px solid var(--border);border-radius:4px;padding:11px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.req-need{font-weight:600;color:#c8e6c8;font-size:14px;flex:1;min-width:120px}
+.req-offer{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--amber)}
+.req-who{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--green-dim);white-space:nowrap}
+.remove-btn{background:none;border:none;color:var(--red);font-size:20px;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0}
+.obj-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);transition:background .15s}
+.obj-row:hover{background:rgba(57,255,20,0.02)}
 .obj-row:last-child{border-bottom:none}
-.obj-check{width:20px;height:20px;border:1px solid var(--green-muted);border-radius:2px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .2s;background:transparent}
+.obj-check{width:22px;height:22px;border:1px solid var(--green-muted);border-radius:2px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .2s;background:transparent}
 .obj-check.done{background:var(--green-dark);border-color:var(--green)}
-.obj-check i{font-size:11px;color:var(--green);display:none}
+.obj-check i{font-size:12px;color:var(--green);display:none}
 .obj-check.done i{display:block}
-.obj-text{flex:1;font-size:12px;color:#a0c8a0;transition:all .2s}
+.obj-text{flex:1;font-size:14px;color:#a0c8a0;transition:all .2s}
 .obj-text.done{text-decoration:line-through;color:#3a5a3a}
-.obj-priority{font-family:'Share Tech Mono',monospace;font-size:9px;padding:2px 7px;border-radius:2px;flex-shrink:0}
+.obj-priority{font-family:'Share Tech Mono',monospace;font-size:10px;padding:3px 8px;border-radius:2px;flex-shrink:0}
 .pri-crit{background:rgba(255,60,60,0.15);color:var(--red);border:1px solid rgba(255,60,60,0.3)}
 .pri-high{background:rgba(255,179,0,0.1);color:var(--amber);border:1px solid rgba(255,179,0,0.3)}
 .pri-med{background:rgba(0,191,255,0.1);color:var(--blue);border:1px solid rgba(0,191,255,0.3)}
-.modpack-card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:14px;margin-bottom:10px}
+.modpack-card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:18px;margin-bottom:12px}
 .modpack-card.recommended{border-color:var(--green-muted);box-shadow:0 0 12px rgba(57,255,20,0.06)}
-.modpack-name{font-weight:700;font-size:15px;color:var(--green);margin-bottom:2px}
-.modpack-tag{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--amber);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
-.rec-badge{font-family:'Share Tech Mono',monospace;font-size:9px;padding:2px 9px;background:rgba(57,255,20,0.15);color:var(--green);border:1px solid var(--green-muted);border-radius:2px;display:inline-block;margin-bottom:7px}
-.rating-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
-.rating-name{font-size:10px;color:#5a8a5a;width:110px;font-family:'Share Tech Mono',monospace;flex-shrink:0}
-.rating-bar{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.modpack-name{font-weight:700;font-size:17px;color:var(--green);margin-bottom:3px}
+.modpack-tag{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--amber);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.rec-badge{font-family:'Share Tech Mono',monospace;font-size:10px;padding:3px 10px;background:rgba(57,255,20,0.15);color:var(--green);border:1px solid var(--green-muted);border-radius:2px;display:inline-block;margin-bottom:8px}
+.rating-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.rating-name{font-size:11px;color:#5a8a5a;width:120px;font-family:'Share Tech Mono',monospace;flex-shrink:0}
+.rating-bar{flex:1;height:5px;background:var(--border);border-radius:2px;overflow:hidden}
 .rating-fill{height:100%;border-radius:2px}
 .fill-green{background:var(--green)}
 .fill-amber{background:var(--amber)}
 .fill-blue{background:var(--blue)}
-.rating-num{font-family:'Share Tech Mono',monospace;font-size:10px;color:#5a8a5a;width:28px;text-align:right}
-.vote-section{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:12px;margin-top:12px}
-.vote-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.vote-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:#a0c8a0;width:130px;flex-shrink:0}
-.vote-bar-wrap{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.rating-num{font-family:'Share Tech Mono',monospace;font-size:11px;color:#5a8a5a;width:32px;text-align:right}
+.vote-section{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:16px;margin-top:14px}
+.vote-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.vote-label{font-family:'Share Tech Mono',monospace;font-size:11px;color:#a0c8a0;width:150px;flex-shrink:0}
+.vote-bar-wrap{flex:1;height:7px;background:var(--border);border-radius:3px;overflow:hidden}
 .vote-bar-fill{height:100%;background:var(--green);border-radius:3px;transition:width .4s}
-.vote-count{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--green-dim);width:55px;text-align:right}
-input[type=text]{background:var(--bg);border:1px solid var(--border2);color:#c8e6c8;padding:6px 10px;border-radius:3px;font-family:'Share Tech Mono',monospace;font-size:11px;outline:none;width:100%;transition:border-color .2s}
+.vote-count{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--green-dim);width:60px;text-align:right}
+input[type=text]{background:var(--bg);border:1px solid var(--border2);color:#c8e6c8;padding:8px 12px;border-radius:3px;font-family:'Share Tech Mono',monospace;font-size:12px;outline:none;width:100%;transition:border-color .2s}
 input[type=text]:focus{border-color:var(--green);box-shadow:0 0 0 1px rgba(57,255,20,0.1)}
 input[type=text]::placeholder{color:#2a5a2a}
-select{background:var(--bg);border:1px solid var(--border2);color:#c8e6c8;padding:6px 10px;border-radius:3px;font-family:'Share Tech Mono',monospace;font-size:11px;outline:none;flex:1;transition:border-color .2s}
+input[type=password]{background:var(--bg);border:1px solid var(--border2);color:#c8e6c8;padding:8px 12px;border-radius:3px;font-family:'Share Tech Mono',monospace;font-size:12px;outline:none;width:100%;transition:border-color .2s}
+input[type=password]:focus{border-color:var(--green);box-shadow:0 0 0 1px rgba(57,255,20,0.1)}
+.mission-progress-wrap{margin-top:10px}
+.mission-progress-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.mission-progress-fill{height:100%;background:linear-gradient(90deg,var(--green-dark),var(--green));border-radius:3px;transition:width .35s ease}
+.brief-card{margin-bottom:14px}
+.brief-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.brief-grid .full{grid-column:1/-1}
+.site-footer{margin-top:18px;padding-top:14px;border-top:1px solid var(--border);font-family:'Share Tech Mono',monospace;font-size:10px;color:#4f7b4f;text-align:center;letter-spacing:1px}
+select{background:var(--bg);border:1px solid var(--border2);color:#c8e6c8;padding:8px 12px;border-radius:3px;font-family:'Share Tech Mono',monospace;font-size:12px;outline:none;flex:1;transition:border-color .2s}
 select:focus{border-color:var(--green)}
-.btn{background:transparent;border:1px solid var(--green-muted);color:var(--green);padding:6px 16px;border-radius:3px;font-family:'Share Tech Mono',monospace;font-size:10px;cursor:pointer;text-transform:uppercase;letter-spacing:1px;transition:all .2s;white-space:nowrap}
+.btn{background:transparent;border:1px solid var(--green-muted);color:var(--green);padding:8px 18px;border-radius:3px;font-family:'Share Tech Mono',monospace;font-size:11px;cursor:pointer;text-transform:uppercase;letter-spacing:1px;transition:all .2s;white-space:nowrap}
 .btn:hover{background:rgba(57,255,20,0.1);border-color:var(--green)}
 .btn:active{transform:scale(.98)}
-.form-label{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--green-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
-.add-form{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:12px;margin-top:10px;display:grid;grid-template-columns:1fr 1fr auto auto;gap:8px;align-items:end}
-.add-coord-form{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:12px;margin-top:10px;display:grid;grid-template-columns:1fr auto auto auto auto;gap:8px;align-items:end}
-.modpack-desc{font-size:11px;color:#5a8a5a;margin-bottom:10px;line-height:1.6}
-.vote-controls{display:flex;gap:8px;margin-top:8px;align-items:center}
+.btn-sm{padding:5px 12px;font-size:10px}
+.btn-danger{border-color:rgba(255,60,60,0.4);color:var(--red)}
+.btn-danger:hover{background:rgba(255,60,60,0.1);border-color:var(--red)}
+.form-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--green-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
+.add-form{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:14px;margin-top:12px;display:grid;grid-template-columns:1fr 1fr auto auto;gap:10px;align-items:end}
+.add-coord-form{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:14px;margin-top:12px;display:grid;grid-template-columns:1fr auto auto auto auto;gap:10px;align-items:end}
+.modpack-desc{font-size:13px;color:#5a8a5a;margin-bottom:12px;line-height:1.7}
+.vote-controls{display:flex;gap:10px;margin-top:10px;align-items:center}
 .divider{color:var(--border2);margin:0 2px}
+.command-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:14px}
+.cmd-card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:12px 14px}
+.cmd-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--green-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
+.cmd-value{font-size:14px;color:#c8e6c8;font-weight:600}
+.cmd-value.blocker{color:var(--red)}
+.ops-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ops-controls input[type=file]{display:none}
+.meta-line{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.meta-pill{font-family:'Share Tech Mono',monospace;font-size:10px;padding:3px 8px;border:1px solid var(--border2);border-radius:2px;color:#7db27d}
+.obj-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px}
+.obj-owner{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--amber)}
+.obj-updated{font-family:'Share Tech Mono',monospace;font-size:10px;color:#4f7b4f}
+.shortcut-hint{font-family:'Share Tech Mono',monospace;font-size:10px;color:#4f7b4f}
+.obj-actions{display:flex;gap:6px;align-items:center}
+.obj-edit-row{display:grid;grid-template-columns:1fr 120px 100px 100px auto auto;gap:8px;align-items:center;width:100%}
+.obj-edit-row input[type=text],.obj-edit-row select{font-size:11px;padding:6px 8px}
+.user-card select{width:100%}
+.perm-note{font-family:'Share Tech Mono',monospace;font-size:10px;color:#5a8a5a;margin-top:6px}
+.sync-config{display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;margin-top:10px;align-items:end}
+.sync-status{font-family:'Share Tech Mono',monospace;font-size:10px;color:#5a8a5a;margin-top:8px}
+.sync-status.ok{color:var(--green)}
+.sync-status.bad{color:var(--red)}
+.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.admin-card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:16px}
+.diag-box{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:10px;min-height:80px;font-family:'Share Tech Mono',monospace;font-size:11px;color:#a0c8a0;white-space:pre-wrap}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--bg2);border:1px solid var(--green-muted);padding:10px 12px;border-radius:4px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--green);opacity:0;transform:translateY(8px);transition:all .2s;pointer-events:none;z-index:10}
+.toast.show{opacity:1;transform:translateY(0)}
+.war-room.command-mode .kpi-value{font-size:32px}
+.war-room.command-mode .tab{font-size:13px;padding:14px 24px}
+.war-room.command-mode .obj-text,.war-room.command-mode td,.war-room.command-mode .role-task,.war-room.command-mode .req-need{font-size:15px;color:#d5edd5}
+.war-room.command-mode .kpi-label,.war-room.command-mode .form-label,.war-room.command-mode .section-header{font-size:12px}
+.checkpoint-lead,.sitrep-lead{font-size:12px;color:#5a8a5a;margin-bottom:10px;line-height:1.5}
+.checkpoint-rail{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;margin-bottom:12px;scroll-snap-type:x mandatory}
+.checkpoint-node{flex:0 0 auto;min-width:160px;max-width:220px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;scroll-snap-align:start;transition:border-color .2s,box-shadow .2s}
+.checkpoint-node.done{border-color:var(--green-muted);opacity:.65}
+.checkpoint-node .cp-title{font-weight:600;color:#c8e6c8;font-size:13px;margin-bottom:4px}
+.checkpoint-node .cp-note{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--amber)}
+.checkpoint-node .cp-actions{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
+.add-checkpoint-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end}
+.sitrep-text{width:100%;background:var(--bg);border:1px solid var(--border2);color:#c8e6c8;padding:10px 12px;border-radius:4px;font-family:'Share Tech Mono',monospace;font-size:12px;line-height:1.5;resize:vertical;min-height:100px;outline:none}
+.sitrep-text:focus{border-color:var(--green);box-shadow:0 0 0 1px rgba(57,255,20,0.08)}
+textarea.sitrep-text{min-height:120px}
+.session-meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:12px}
+.session-meta-grid .full{grid-column:1/-1}
+.session-meta-hint{font-size:11px;color:#5a8a5a;margin-bottom:10px;line-height:1.5}
+.up-next-lead{font-size:12px;color:#5a8a5a;margin-bottom:10px;line-height:1.5}
+.up-next-list{display:flex;flex-direction:column;gap:0}
+.up-next-row{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border)}
+.up-next-row:last-child{border-bottom:none}
+.up-next-num{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--green-dim);width:24px;flex-shrink:0;padding-top:2px}
+.up-next-body{flex:1;min-width:0}
+.up-next-title{font-size:14px;color:#c8e6c8;font-weight:600;line-height:1.35}
+.up-next-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.wp-copy{font-family:'Share Tech Mono',monospace;font-size:10px;padding:2px 8px}
+.hamburger-btn{
+  display:flex;flex-direction:column;justify-content:center;gap:5px;
+  width:42px;height:42px;padding:0;background:transparent;border:1px solid var(--border2);
+  border-radius:4px;cursor:pointer;flex-shrink:0;align-self:flex-start;margin-top:2px
+}
+.hamburger-btn span{display:block;height:2px;width:20px;margin:0 auto;background:var(--green);border-radius:1px}
+.hamburger-btn:hover{border-color:var(--green-muted);background:rgba(57,255,20,0.06)}
+.header-brand-wrap{display:flex;gap:14px;align-items:flex-start;flex:1;min-width:0}
+.drawer-backdrop{
+  position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:100;
+  opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s;pointer-events:none
+}
+.drawer-backdrop.is-open{opacity:1;visibility:visible;pointer-events:auto}
+.side-drawer{
+  position:fixed;top:0;left:0;bottom:0;width:min(320px,92vw);
+  background:var(--bg2);border-right:1px solid var(--border2);
+  z-index:101;transform:translateX(-100%);transition:transform .22s ease;
+  display:flex;flex-direction:column;box-shadow:8px 0 40px rgba(0,0,0,0.45)
+}
+.side-drawer.is-open{transform:translateX(0)}
+.drawer-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--green);letter-spacing:1px}
+.drawer-head button{background:transparent;border:none;color:var(--green-dim);font-size:22px;line-height:1;cursor:pointer;padding:4px 8px;border-radius:4px}
+.drawer-head button:hover{color:var(--green);background:rgba(57,255,20,0.06)}
+.drawer-scroll{flex:1;overflow-y:auto;padding:12px 14px 24px}
+.drawer-group-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--green-dim);text-transform:uppercase;letter-spacing:2px;margin:14px 0 8px}
+.drawer-group-label:first-child{margin-top:4px}
+.drawer-nav-btn{
+  display:block;width:100%;text-align:left;padding:10px 12px;margin-bottom:4px;background:transparent;border:1px solid var(--border);
+  border-radius:4px;color:#c8e6c8;font-family:inherit;font-size:14px;cursor:pointer;transition:background .15s,border-color .15s
+}
+.drawer-nav-btn:hover{background:rgba(57,255,20,0.06);border-color:var(--green-muted)}
+.drawer-link-out{
+  display:block;padding:8px 10px;color:var(--blue);text-decoration:none;font-size:13px;border-radius:4px;border:1px solid transparent
+}
+.drawer-link-out:hover{background:rgba(0,191,255,0.06);border-color:rgba(0,191,255,0.25)}
+.drawer-hint{font-size:11px;color:#5a8a5a;line-height:1.45;margin-top:10px}
+.collapse-toggle{
+  display:flex;align-items:center;gap:10px;width:100%;background:transparent;border:none;color:inherit;
+  cursor:pointer;padding:0 0 12px;margin:-2px 0 0;border-bottom:1px solid var(--border);margin-bottom:12px;text-align:left
+}
+.collapse-toggle:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.collapse-glyph{
+  font-family:'Share Tech Mono',monospace;font-size:18px;font-weight:600;color:var(--green);
+  width:22px;flex-shrink:0;line-height:1;text-align:center;user-select:none
+}
+.collapse-title{margin:0;padding:0;border:none;flex:1}
+.collapse-title.section-header{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.collapsible-card.is-collapsed .collapse-toggle{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.collapsible-card.is-collapsed .collapse-panel{display:none}
 @media(max-width:600px){
   .add-form{grid-template-columns:1fr 1fr;}.add-form>:last-child{grid-column:1/-1}
   .add-coord-form{grid-template-columns:1fr 1fr}.add-coord-form>:last-child{grid-column:1/-1}
   .role-card{grid-template-columns:auto 1fr;}.role-card>:last-child{grid-column:2}
+  .admin-grid{grid-template-columns:1fr}
+  .brief-grid{grid-template-columns:1fr}
+  .add-checkpoint-row{grid-template-columns:1fr}
 }
 </style>
 </head>
 <body>
+<div id="drawer-backdrop" class="drawer-backdrop" onclick="closeSideDrawer()" aria-hidden="true"></div>
+<aside id="side-drawer" class="side-drawer" aria-hidden="true" aria-label="War Room menu">
+  <div class="drawer-head">
+    <span>MENU // MODULES</span>
+    <button type="button" onclick="closeSideDrawer()" aria-label="Close menu">×</button>
+  </div>
+  <div class="drawer-scroll">
+    <div class="drawer-group-label">Board</div>
+    <button type="button" class="drawer-nav-btn" onclick="switchTab('objectives')">🎯 Mission</button>
+    <button type="button" class="drawer-nav-btn" onclick="switchTab('roles')">👥 Operations &amp; roles</button>
+    <button type="button" class="drawer-nav-btn" onclick="switchTab('logistics')">🗺 Waypoints</button>
+    <button type="button" class="drawer-nav-btn" onclick="switchTab('requests')">📦 Supply board</button>
+    <button type="button" class="drawer-nav-btn" onclick="switchTab('modpack')">🎮 Strategy vote</button>
+    <button type="button" class="drawer-nav-btn" onclick="switchTab('admin')">🛠 Admin &amp; cloud</button>
+    <div class="drawer-group-label">Quick actions</div>
+    <button type="button" class="drawer-nav-btn" onclick="copyOpsBriefMd(); closeSideDrawer();">📋 Copy Markdown brief</button>
+    <button type="button" class="drawer-nav-btn" onclick="copySquadPing(); closeSideDrawer();">📣 Copy squad ping</button>
+    <button type="button" class="drawer-nav-btn" onclick="exportPlan(); closeSideDrawer();">💾 Export board JSON</button>
+    <div class="drawer-group-label">Useful links</div>
+    <a class="drawer-link-out" href="https://minecraft.wiki/" target="_blank" rel="noopener noreferrer">Minecraft Wiki</a>
+    <a class="drawer-link-out" href="https://minecraft.wiki/w/Coordinates" target="_blank" rel="noopener noreferrer">Coordinates &amp; F3</a>
+    <a class="drawer-link-out" href="https://www.chunkbase.com/" target="_blank" rel="noopener noreferrer">Chunkbase (seed tools)</a>
+    <a class="drawer-link-out" href="https://fabricmc.net/" target="_blank" rel="noopener noreferrer">Fabric</a>
+    <a class="drawer-link-out" href="https://modrinth.com/" target="_blank" rel="noopener noreferrer">Modrinth</a>
+    <p class="drawer-hint">Links open in a new tab. Use the Mission tab headers (− / +) to fold sections you are not editing; your choices are saved in this browser.</p>
+  </div>
+</aside>
 <div class="war-room">
   <div class="header">
-    <div>
-      <div class="header-logo">// MINECRAFT WAR ROOM v1.0</div>
+    <div class="header-brand-wrap">
+      <button type="button" class="hamburger-btn" id="btn-drawer-open" onclick="openSideDrawer()" aria-label="Open menu" aria-controls="side-drawer" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <div>
+      <div class="header-logo">// WAR ROOM TACTICAL LAYER v1.5.0</div>
       <div class="header-title">⚔ COMMAND CENTER</div>
+      </div>
     </div>
     <div class="header-status">
-      <span><span class="dot"></span> SERVER ONLINE</span>
+      <span id="cloud-pill" class="cloud-pill cloud-pill-local" title="Cloud sync status">LOCAL</span>
       <span class="divider">|</span>
-      <span><span class="dot amber"></span> MODPACK TBD</span>
+      <span class="header-clock" id="header-clock" title="Local time"></span>
       <span class="divider">|</span>
-      <span><span class="dot red"></span> AGE 0</span>
+      <span><span class="dot"></span> LINK UP</span>
+      <span class="divider">|</span>
+      <span><span class="dot amber"></span> SESSION</span>
+      <span class="divider">|</span>
+      <button type="button" class="btn btn-sm" onclick="toggleCommandMode()">COMMAND MODE</button>
     </div>
   </div>
 
   <div class="tabs">
-    <div class="tab active" onclick="switchTab('objectives')">🎯 Objectives</div>
-    <div class="tab" onclick="switchTab('roles')">👥 Roles</div>
-    <div class="tab" onclick="switchTab('logistics')">🗺 Logistics</div>
-    <div class="tab" onclick="switchTab('requests')">📦 Requests</div>
-    <div class="tab" onclick="switchTab('modpack')">🎮 Modpack Vote</div>
+    <div class="tab active" onclick="switchTab('objectives')">🎯 Mission</div>
+    <div class="tab" onclick="switchTab('roles')">👥 Operations</div>
+    <div class="tab" onclick="switchTab('logistics')">🗺 Waypoints</div>
+    <div class="tab" onclick="switchTab('requests')">📦 Supply Board</div>
+    <div class="tab" onclick="switchTab('modpack')">🎮 Strategy Vote</div>
+    <div class="tab" onclick="switchTab('admin')">🛠 Admin</div>
   </div>
 
   <div class="content">
+    <div class="command-strip">
+      <div class="cmd-card">
+        <div class="cmd-label">Current Mission</div>
+        <div class="cmd-value" id="cmd-mission">Establish Base Operations</div>
+      </div>
+      <div class="cmd-card">
+        <div class="cmd-label">Primary Blocker</div>
+        <div class="cmd-value blocker" id="cmd-blocker">Iron + Food Bottleneck</div>
+      </div>
+      <div class="cmd-card">
+        <div class="cmd-label">Next Milestone</div>
+        <div class="cmd-value" id="cmd-milestone">Reach Iron Age & Secure Smelter</div>
+      </div>
+      <div class="cmd-card">
+        <div class="cmd-label">Board Ops</div>
+        <div class="ops-controls">
+          <button class="btn btn-sm" onclick="exportPlan()">Export</button>
+          <button class="btn btn-sm" onclick="document.getElementById('import-file').click()">Import</button>
+          <button class="btn btn-sm btn-danger" onclick="resetBoard()">Reset</button>
+          <input type="file" id="import-file" accept=".json" onchange="importPlan(event)">
+        </div>
+        <div class="shortcut-hint">Shortcuts: 1-6 tabs, N objective, L location, R request</div>
+        <div class="sync-status" id="cloud-status">Cloud: local mode only</div>
+      </div>
+      <div class="cmd-card user-card">
+        <div class="cmd-label">Active Operator</div>
+        <select id="active-user" onchange="setActiveUser(this.value)"></select>
+        <div class="perm-note" id="active-user-role"></div>
+      </div>
+    </div>
 
     <!-- OBJECTIVES -->
     <div id="panel-objectives" class="panel active">
-      <div class="grid3">
-        <div class="card card-accent-red">
-          <div class="kpi-label">Current Age / Tier</div>
-          <div class="kpi-value" style="color:var(--red)">0</div>
-          <div class="kpi-sub">Stone Age — New World</div>
-        </div>
-        <div class="card card-accent-amber">
-          <div class="kpi-label">Team Goal</div>
-          <div class="kpi-value" style="font-size:16px;padding-top:4px;color:var(--amber)">Establish Base</div>
-          <div class="kpi-sub">Build permanent HQ</div>
-        </div>
-        <div class="card card-accent-red">
-          <div class="kpi-label">Bottleneck</div>
-          <div class="kpi-value" style="font-size:16px;padding-top:4px;color:var(--red)">Iron + Food</div>
-          <div class="kpi-sub">Critical shortage</div>
+      <div class="card collapsible-card" data-mission-section="overview">
+        <button type="button" class="collapse-toggle" onclick="toggleMissionSection('overview')" aria-expanded="true" title="Collapse or expand">
+          <span class="collapse-glyph" aria-hidden="true">−</span>
+          <span class="section-header collapse-title"><i class="ti ti-target"></i> Mission overview</span>
+        </button>
+        <div class="collapse-panel">
+          <div class="grid3">
+            <div class="card card-accent-blue">
+              <div class="kpi-label">Open Objectives</div>
+              <div class="kpi-value" style="color:var(--blue)" id="kpi-open-objectives">0</div>
+              <div class="kpi-sub" id="kpi-progress-label">0% complete · 0 / 0</div>
+              <div class="mission-progress-wrap">
+                <div class="mission-progress-track"><div class="mission-progress-fill" id="mission-progress-fill" style="width:0%"></div></div>
+              </div>
+            </div>
+            <div class="card card-accent-amber">
+              <div class="kpi-label">Session Goal</div>
+              <div class="kpi-value" style="font-size:16px;padding-top:4px;color:var(--amber)" id="kpi-session-goal">Establish Base</div>
+              <div class="kpi-sub" id="kpi-session-sub">Build permanent HQ</div>
+            </div>
+            <div class="card card-accent-red">
+              <div class="kpi-label">Bottleneck</div>
+              <div class="kpi-value" style="font-size:16px;padding-top:4px;color:var(--red)" id="kpi-bottleneck">Iron + Food</div>
+              <div class="kpi-sub" id="kpi-bottleneck-sub">Critical shortage</div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="section-header"><i class="ti ti-list-check"></i> Primary Objectives</div>
-      <div class="card" style="margin-bottom:12px"><div id="obj-list"></div></div>
-      <div class="section-header"><i class="ti ti-progress"></i> Tier Progression</div>
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;margin-bottom:5px">
-          <span style="font-size:11px;color:#5a8a5a">Age 0 — Stone</span>
-          <span style="font-size:11px;color:#5a8a5a">Age 1 — Iron Age</span>
+
+      <div class="card collapsible-card" data-mission-section="session-meta">
+        <button type="button" class="collapse-toggle" onclick="toggleMissionSection('session-meta')" aria-expanded="true" title="Collapse or expand">
+          <span class="collapse-glyph" aria-hidden="true">−</span>
+          <span class="section-header collapse-title"><i class="ti ti-world"></i> Session &amp; world</span>
+        </button>
+        <div class="collapse-panel">
+          <p class="session-meta-hint">Defaults to Minecraft (Java coords, dimensions); switch <strong>Game</strong> to &quot;Other&quot; if you reuse this board elsewhere. Saved with the board and cloud sync.</p>
+          <div class="session-meta-grid">
+            <div class="full" style="grid-column:1/-1"><div class="form-label">World / server name</div><input type="text" id="meta-world-label" placeholder="e.g. Season 3 SMP, Realm name"></div>
+            <div><div class="form-label">Game</div>
+              <select id="meta-game-preset">
+                <option value="minecraft" selected>Minecraft</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div><div class="form-label">Edition (Minecraft)</div>
+              <select id="meta-platform">
+                <option value="java" selected>Java</option>
+                <option value="bedrock">Bedrock</option>
+                <option value="other">Other / mixed</option>
+              </select>
+            </div>
+            <div class="full" style="grid-column:1/-1"><div class="form-label">Pack, version, or mods</div><input type="text" id="meta-pack-mods" placeholder="e.g. Vanilla 1.21 · Fabric · ATM9 · Create mod"></div>
+            <div><div class="form-label">Default waypoint layer</div>
+              <select id="meta-default-dimension">
+                <option value="overworld" selected>Overworld</option>
+                <option value="nether">Nether</option>
+                <option value="end">End</option>
+                <option value="na">N / A (other games)</option>
+              </select>
+            </div>
+          </div>
+          <button type="button" class="btn btn-sm" onclick="saveSessionMeta()">Save session info</button>
         </div>
-        <div class="tier-bar"><div class="tier-fill" id="tier-fill" style="width:18%"></div></div>
-        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--green-dim);margin-top:5px">18% — IRON SMELTER REQUIRED TO ADVANCE</div>
+      </div>
+
+      <div class="card collapsible-card up-next-card" data-mission-section="up-next">
+        <button type="button" class="collapse-toggle" onclick="toggleMissionSection('up-next')" aria-expanded="true" title="Collapse or expand">
+          <span class="collapse-glyph" aria-hidden="true">−</span>
+          <span class="section-header collapse-title"><i class="ti ti-list"></i> Up next</span>
+        </button>
+        <div class="collapse-panel">
+          <p class="up-next-lead">The next few open objectives, ordered by urgency — handy to read aloud on voice chat.</p>
+          <div id="up-next-list" class="up-next-list"></div>
+        </div>
+      </div>
+
+      <div class="card collapsible-card brief-card" data-mission-section="brief">
+        <button type="button" class="collapse-toggle" onclick="toggleMissionSection('brief')" aria-expanded="true" title="Collapse or expand">
+          <span class="collapse-glyph" aria-hidden="true">−</span>
+          <span class="section-header collapse-title"><i class="ti ti-edit"></i> Mission brief</span>
+        </button>
+        <div class="collapse-panel">
+          <div class="brief-grid">
+            <div class="full"><div class="form-label">Mission headline</div><input type="text" id="brief-mission" placeholder="Current mission"></div>
+            <div><div class="form-label">Next milestone (fallback)</div><input type="text" id="brief-milestone" placeholder="When no open objectives"></div>
+            <div><div class="form-label">Fallback blocker</div><input type="text" id="brief-blocker" placeholder="If no BLOCKED objective"></div>
+            <div><div class="form-label">Session goal</div><input type="text" id="brief-session-goal" placeholder="Amber card title"></div>
+            <div><div class="form-label">Session detail</div><input type="text" id="brief-session-sub" placeholder="Amber card subtitle"></div>
+            <div><div class="form-label">Bottleneck title</div><input type="text" id="brief-bottleneck" placeholder="Red card title"></div>
+            <div><div class="form-label">Bottleneck detail</div><input type="text" id="brief-bottleneck-sub" placeholder="Red card subtitle"></div>
+            <div class="full" style="margin-top:4px"><button type="button" class="btn btn-sm" onclick="saveMissionBrief()">Save brief</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card collapsible-card checkpoint-card" data-mission-section="checkpoints">
+        <button type="button" class="collapse-toggle" onclick="toggleMissionSection('checkpoints')" aria-expanded="true" title="Collapse or expand">
+          <span class="collapse-glyph" aria-hidden="true">−</span>
+          <span class="section-header collapse-title"><i class="ti ti-flag"></i> Battle rhythm checkpoints</span>
+        </button>
+        <div class="collapse-panel">
+          <p class="checkpoint-lead">Session phases (first night, iron, nether, boss, mod chapter…). Check them off as you go — synced for the whole group.</p>
+          <div id="checkpoint-rail" class="checkpoint-rail"></div>
+          <div class="add-checkpoint-row">
+            <input type="text" id="cp-title" placeholder="Phase name (e.g. Iron smelter online)">
+            <input type="text" id="cp-note" placeholder="Target / window (e.g. T+45m, tonight)">
+            <button type="button" class="btn btn-sm" onclick="addCheckpoint()">Add</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card collapsible-card sitrep-card" data-mission-section="sitrep">
+        <button type="button" class="collapse-toggle" onclick="toggleMissionSection('sitrep')" aria-expanded="true" title="Collapse or expand">
+          <span class="collapse-glyph" aria-hidden="true">−</span>
+          <span class="section-header collapse-title"><i class="ti ti-report-analytics"></i> Situation report (scratch)</span>
+        </button>
+        <div class="collapse-panel">
+          <p class="sitrep-lead">Freeform intel: paste Discord context, risk callouts, or delegation notes. Included in Markdown export.</p>
+          <textarea id="sitrep-notes" class="sitrep-text" rows="5" placeholder="COMMS: ...  RISKS: ...  NEXT SYNC: ..."></textarea>
+        </div>
+      </div>
+
+      <div class="card collapsible-card" data-mission-section="objectives-list">
+        <button type="button" class="collapse-toggle" onclick="toggleMissionSection('objectives-list')" aria-expanded="true" title="Collapse or expand">
+          <span class="collapse-glyph" aria-hidden="true">−</span>
+          <span class="section-header collapse-title"><i class="ti ti-list-check"></i> Mission objectives &amp; add</span>
+        </button>
+        <div class="collapse-panel">
+          <div class="section-header" style="margin-top:4px"><i class="ti ti-list-check"></i> Active list</div>
+          <div class="card" style="margin-bottom:12px"><div id="obj-list"></div></div>
+          <div class="section-header"><i class="ti ti-plus"></i> Add objective</div>
+          <div class="add-form" style="margin-bottom:0">
+            <div><div class="form-label">Objective</div><input type="text" id="obj-text" placeholder="Secure village and set waypoint"></div>
+            <div><div class="form-label">Owner</div><input type="text" id="obj-owner" placeholder="Foreman"></div>
+            <div>
+              <div class="form-label">Priority</div>
+              <select id="obj-priority" style="width:120px">
+                <option value="crit">CRIT</option>
+                <option value="high" selected>HIGH</option>
+                <option value="med">MED</option>
+              </select>
+            </div>
+            <div style="align-self:end"><button class="btn" onclick="addObjective()">Add Objective</button></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -188,36 +498,58 @@ select:focus{border-color:var(--green)}
 
     <!-- LOGISTICS -->
     <div id="panel-logistics" class="panel">
-      <div class="section-header"><i class="ti ti-map-pin"></i> Key Locations</div>
+      <div class="section-header"><i class="ti ti-map-pin"></i> Tactical Waypoints</div>
       <div class="card tbl-wrap" style="margin-bottom:12px;padding:0">
         <table>
-          <thead><tr><th>Location</th><th>Type</th><th>Coords (X / Y / Z)</th><th>Notes</th></tr></thead>
-          <tbody id="coords-table">
-            <tr><td>Main Base</td><td><span class="status-badge badge-active">BASE</span></td><td class="coord">??? / 64 / ???</td><td style="color:#5a8a5a">Not set yet</td></tr>
-            <tr><td>Spawn Point</td><td><span class="status-badge badge-idle">SPAWN</span></td><td class="coord">0 / 64 / 0</td><td style="color:#5a8a5a">Default world spawn</td></tr>
-          </tbody>
+          <thead><tr><th>Location</th><th>Category</th><th>Layer</th><th>Coords (X / Y / Z)</th><th>Risk</th><th>Owner</th><th>Updated</th><th></th></tr></thead>
+          <tbody id="coords-table"></tbody>
         </table>
       </div>
       <div class="section-header"><i class="ti ti-plus"></i> Log New Location</div>
       <div class="add-coord-form">
         <div><div class="form-label">Location Name</div><input type="text" id="loc-name" placeholder="Iron Mine, Stronghold..."></div>
         <div><div class="form-label">X</div><input type="text" id="loc-x" placeholder="0" style="width:70px"></div>
-        <div><div class="form-label">Y</div><input type="text" id="loc-y" placeholder="64" style="width:70px"></div>
+        <div><div class="form-label">Y</div><input type="text" id="loc-y" placeholder="64" value="64" style="width:70px"></div>
         <div><div class="form-label">Z</div><input type="text" id="loc-z" placeholder="0" style="width:70px"></div>
-        <div style="align-self:end"><button class="btn" onclick="addCoord()">+ LOG</button></div>
+        <div><div class="form-label">Category</div><input type="text" id="loc-cat" placeholder="Ore / Base / Threat"></div>
+        <div><div class="form-label">Layer</div>
+          <select id="loc-dimension" style="width:130px">
+            <option value="overworld">Overworld</option>
+            <option value="nether">Nether</option>
+            <option value="end">End</option>
+            <option value="na">N / A</option>
+          </select>
+        </div>
+        <div><div class="form-label">Risk</div>
+          <select id="loc-risk" style="width:110px">
+            <option value="low">LOW</option>
+            <option value="med" selected>MED</option>
+            <option value="high">HIGH</option>
+          </select>
+        </div>
+        <div><div class="form-label">Owner</div><input type="text" id="loc-owner" placeholder="Pathfinder" style="width:110px"></div>
+        <div style="align-self:end"><button class="btn" onclick="addCoord()">Log Location</button></div>
       </div>
     </div>
 
     <!-- REQUESTS -->
     <div id="panel-requests" class="panel">
-      <div class="section-header"><i class="ti ti-arrow-left-right"></i> Request &amp; React Board</div>
+      <div class="section-header"><i class="ti ti-arrow-left-right"></i> Supply Exchange</div>
       <div id="requests-list"></div>
       <div class="section-header" style="margin-top:12px"><i class="ti ti-plus"></i> Post a Request</div>
       <div class="add-form">
-        <div><div class="form-label">I Need</div><input type="text" id="req-need" placeholder="64x Iron Ingots..."></div>
-        <div><div class="form-label">I Offer</div><input type="text" id="req-offer" placeholder="Food, Wood..."></div>
-        <div><div class="form-label">Your Name</div><input type="text" id="req-who" placeholder="Role/Name" style="width:100px"></div>
-        <div style="align-self:end"><button class="btn" onclick="addRequest()">+ POST</button></div>
+        <div><div class="form-label">Need</div><input type="text" id="req-need" placeholder="64x Iron Ingots..."></div>
+        <div><div class="form-label">Offer</div><input type="text" id="req-offer" placeholder="Food, Wood..."></div>
+        <div><div class="form-label">Owner</div><input type="text" id="req-who" placeholder="Role/Name" style="width:100px"></div>
+        <div>
+          <div class="form-label">Urgency</div>
+          <select id="req-urgency" style="width:90px">
+            <option value="med" selected>MED</option>
+            <option value="high">HIGH</option>
+            <option value="crit">CRIT</option>
+          </select>
+        </div>
+        <div style="align-self:end"><button class="btn" onclick="addRequest()">Post Request</button></div>
       </div>
     </div>
 
@@ -225,77 +557,1001 @@ select:focus{border-color:var(--green)}
     <div id="panel-modpack" class="panel">
       <div class="section-header"><i class="ti ti-trophy"></i> Modpack Evaluation Matrix</div>
       <div id="modpacks-list"></div>
+
+      <!-- Add new modpack form -->
+      <div class="section-header" style="margin-top:16px"><i class="ti ti-plus"></i> Add a Modpack</div>
+      <div class="card" style="margin-bottom:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div><div class="form-label">Modpack Name</div><input type="text" id="mp-name" placeholder="e.g. All the Mods 9"></div>
+          <div><div class="form-label">Tag / Focus</div><input type="text" id="mp-tag" placeholder="e.g. Kitchen Sink"></div>
+        </div>
+        <div style="margin-bottom:10px"><div class="form-label">Description</div><input type="text" id="mp-desc" placeholder="What makes this pack good for the squad..."></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+          <div>
+            <div class="form-label">Complexity (0–100)</div>
+            <input type="text" id="mp-complexity" placeholder="50">
+          </div>
+          <div>
+            <div class="form-label">RPG Depth (0–100)</div>
+            <input type="text" id="mp-rpg" placeholder="50">
+          </div>
+          <div>
+            <div class="form-label">Co-op Potential (0–100)</div>
+            <input type="text" id="mp-coop" placeholder="50">
+          </div>
+        </div>
+        <button class="btn" onclick="addModpack()">+ ADD MODPACK</button>
+      </div>
+
       <div class="vote-section">
-        <div class="section-header" style="margin-bottom:10px"><i class="ti ti-chart-bar"></i> Squad Vote</div>
+        <div class="section-header" style="margin-bottom:12px"><i class="ti ti-chart-bar"></i> Squad Vote</div>
         <div id="vote-results"></div>
         <div class="vote-controls">
-          <select id="vote-select">
-            <option value="">-- Cast your vote --</option>
-            <option value="vh">Vault Hunters 3rd Ed.</option>
-            <option value="bmc">Better MC (BMC4)</option>
-            <option value="e9">Enigmatica 9</option>
-          </select>
+          <select id="vote-select"><option value="">-- Cast your vote --</option></select>
           <button class="btn" onclick="castVote()">VOTE ↗</button>
         </div>
       </div>
     </div>
 
+    <!-- ADMIN -->
+    <div id="panel-admin" class="panel">
+      <div class="section-header"><i class="ti ti-settings"></i> Admin & Cloud Setup</div>
+      <div class="admin-grid">
+        <div class="admin-card">
+          <div class="form-label">Supabase URL</div>
+          <input type="text" id="cloud-url" placeholder="https://your-project-ref.supabase.co">
+          <div class="form-label" style="margin-top:10px">Supabase Anon Key</div>
+          <input type="text" id="cloud-key" placeholder="Paste anon key here">
+          <div class="form-label" style="margin-top:10px">Workspace ID</div>
+          <input type="text" id="cloud-workspace" placeholder="e.g. lads-main">
+          <div class="form-label" style="margin-top:10px">Workspace Access Key (shared secret)</div>
+          <input type="password" id="cloud-access-key" placeholder="e.g. warroom-2026">
+          <div class="ops-controls" style="margin-top:12px">
+            <button class="btn btn-sm" onclick="connectCloud()">Connect Cloud</button>
+            <button class="btn btn-sm" onclick="runCloudDiagnostics()">Test Config</button>
+            <button class="btn btn-sm" onclick="copyJoinLink()">Copy join link</button>
+            <button class="btn btn-sm btn-danger" onclick="disconnectCloud()">Disconnect</button>
+          </div>
+          <div class="perm-note">Only share Workspace ID + Access Key with trusted squad members.</div>
+        </div>
+        <div class="admin-card">
+          <div class="form-label">Diagnostics</div>
+          <div id="admin-diagnostics" class="diag-box">Status: waiting for test...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="site-footer">War Room v1.5.0 · Session context · waypoints · objectives · Commander sets the beat</div>
   </div>
 </div>
 
 <script>
-const objectives=[
-  {text:"Find a safe base location (flat terrain, near trees + water)",priority:"crit",done:false},
-  {text:"Build starter shelter before first night",priority:"crit",done:false},
-  {text:"Set up communal chest storage system",priority:"high",done:false},
-  {text:"Locate iron ore vein — minimum 64 blocks",priority:"high",done:false},
-  {text:"Establish farm (wheat + carrots minimum)",priority:"high",done:false},
-  {text:"Scout nearby biomes and log coordinates",priority:"med",done:false},
-  {text:"Build Nether portal (post iron age)",priority:"med",done:false},
-];
+const STORAGE_KEY='war_room_state_v1';
+const REMOTE_CONFIG_KEY='war_room_remote_cfg_v1';
+const MISSION_COLLAPSE_KEY='war_room_mission_collapse_v1';
+const defaults={
+  commandMode:false,
+  currentUserId:'u_cmd',
+  users:[
+    {id:'u_cmd',name:'Squad Lead',role:'Commander',permissions:{objective:{add:true,edit:true,remove:true,toggle:true}}},
+    {id:'u_ops',name:'Ops Specialist',role:'Editor',permissions:{objective:{add:true,edit:true,remove:false,toggle:true}}},
+    {id:'u_view',name:'Observer',role:'Viewer',permissions:{objective:{add:false,edit:false,remove:false,toggle:false}}}
+  ],
+  command:{
+    mission:'Establish Base Operations',
+    blocker:'Iron + Food Bottleneck',
+    milestone:'Reach Iron Age & Secure Smelter',
+    sessionGoal:'Establish Base',
+    sessionGoalSub:'Build permanent HQ',
+    bottleneckLabel:'Iron + Food',
+    bottleneckSub:'Critical shortage'
+  },
+  sessionMeta:{
+    worldLabel:'',
+    gamePreset:'minecraft',
+    platform:'java',
+    packOrMods:'',
+    defaultDimension:'overworld'
+  },
+  objectives:[
+    {text:'Find a safe base location (flat terrain, near trees + water)',priority:'crit',owner:'Pathfinder',status:'active',done:false,updatedAt:Date.now()},
+    {text:'Build starter shelter before first night',priority:'crit',owner:'Foreman',status:'active',done:false,updatedAt:Date.now()},
+    {text:'Set up communal chest storage system',priority:'high',owner:'Quartermaster',status:'active',done:false,updatedAt:Date.now()},
+    {text:'Locate iron ore vein — minimum 64 blocks',priority:'high',owner:'Pathfinder',status:'blocked',done:false,updatedAt:Date.now()},
+    {text:'Establish farm (wheat + carrots minimum)',priority:'high',owner:'Steward',status:'active',done:false,updatedAt:Date.now()},
+    {text:'Scout nearby biomes and log coordinates',priority:'med',owner:'Pathfinder',status:'active',done:false,updatedAt:Date.now()},
+    {text:'Build Nether portal (post iron age)',priority:'med',owner:'Vanguard',status:'idle',done:false,updatedAt:Date.now()}
+  ],
+  roles:[
+    {icon:'🏗',name:'The Foreman',player:'Unassigned',task:'Base layout, building standards, room planning.',status:'idle'},
+    {icon:'⚒',name:'The Quartermaster',player:'Unassigned',task:'Storage, labeling, and item routing.',status:'idle'},
+    {icon:'🧭',name:'The Pathfinder',player:'Unassigned',task:'Exploration and coordinate intelligence.',status:'idle'},
+    {icon:'⚔',name:'The Vanguard',player:'Unassigned',task:'Combat, gear progression, and encounter lead.',status:'idle'},
+    {icon:'🔮',name:'The Arcanist',player:'Unassigned',task:'Magic and tech unlock progression.',status:'idle'},
+    {icon:'🌾',name:'The Steward',player:'Unassigned',task:'Food, farming, and passive mob systems.',status:'idle'}
+  ],
+  locations:[
+    {name:'Main Base',category:'BASE',dimension:'overworld',x:'?',y:'64',z:'?',risk:'med',owner:'Foreman',updatedAt:Date.now()},
+    {name:'Spawn Point',category:'SPAWN',dimension:'overworld',x:'0',y:'64',z:'0',risk:'low',owner:'Pathfinder',updatedAt:Date.now()}
+  ],
+  requests:[
+    {need:'64x Logs (any type)',offer:'Cooked food x32',who:'Pathfinder',urgency:'med',status:'open',updatedAt:Date.now()},
+    {need:'Iron Pickaxe',offer:'Scouting report',who:'Foreman',urgency:'high',status:'open',updatedAt:Date.now()}
+  ],
+  modpacks:[
+    {id:'vh',name:'Vault Hunters 3rd Edition',tag:'Pure RPG Progression',rec:true,complexity:80,rpg:95,coop:85,desc:'Built around a dungeon loop — run Vaults together, collect loot, and level a massive skill tree.'},
+    {id:'bmc',name:'Better MC (BMC4)',tag:'Exploration & Adventure',rec:false,complexity:45,rpg:70,coop:75,desc:'Classic Minecraft feel with bosses, biomes, and quests for lower automation friction.'},
+    {id:'e9',name:'Enigmatica 9',tag:'Cooperative Building',rec:false,complexity:90,rpg:60,coop:90,desc:'High-tech + magic collaboration with strong role specialization.'}
+  ],
+  votes:{vh:0,bmc:0,e9:0},
+  checkpoints:[
+    {id:'cp_seeded_1',title:'Stabilize — food & shelter',targetNote:'Opening window',done:false},
+    {id:'cp_seeded_2',title:'Tooling runway (iron baseline)',targetNote:'Before day 2',done:false},
+    {id:'cp_seeded_3',title:'Squad sync / first win',targetNote:'Commander sets beat',done:false}
+  ],
+  sitrep:''
+};
 
-const roles=[
-  {icon:"🏗",name:"The Foreman",player:"[Unassigned]",task:"Base layout, building aesthetic, room planning. Stops the squad living in a cobblestone shoebox. Tasks: Design HQ blueprint, assign rooms, maintain build standards.",status:"idle"},
-  {icon:"⚒",name:"The Quartermaster",player:"[Unassigned]",task:"Storage system and logistics (Iron Chests → AE2 → RS). Knows where everything is. Tasks: Build storage, label chests, maintain item routing.",status:"idle"},
-  {icon:"🧭",name:"The Pathfinder",player:"[Unassigned]",task:"Exploration, biome scouting, waypoints. The squad's GPS. Tasks: Log all coordinates, find rare biomes, locate dungeons + strongholds.",status:"idle"},
-  {icon:"⚔",name:"The Vanguard",player:"[Unassigned]",task:"Combat, boss fights, gear + enchanting. Keeps the team alive. Tasks: Max out armour ASAP, lead boss encounters, supply enchanted gear.",status:"idle"},
-  {icon:"🔮",name:"The Arcanist",player:"[Unassigned]",task:"Magic/tech research and progression. Unlocks advanced mod content. Tasks: Research mod trees, craft key progression items, manage power/mana.",status:"idle"},
-  {icon:"🌾",name:"The Steward",player:"[Unassigned]",task:"Food, farming, and passive mob management. No one starves on their watch. Tasks: Build farms, manage animals, keep communal food supply stocked.",status:"idle"},
-];
+let state=loadState();
+let remote={
+  url:'',
+  anonKey:'',
+  workspaceId:'',
+  accessKey:'',
+  client:null,
+  channel:null,
+  connected:false,
+  isPushing:false,
+  lastRemoteAt:0,
+  syncTimer:null
+};
 
-const modpacks=[
-  {id:"vh",name:"Vault Hunters 3rd Edition",tag:"Pure RPG Progression",rec:true,complexity:80,rpg:95,coop:85,desc:"Built around a dungeon loop — run Vaults together, collect loot, and level a massive skill tree. Every session has clear goals. Best for groups who love grinding with purpose."},
-  {id:"bmc",name:"Better MC (BMC4)",tag:"Exploration & Adventure",rec:false,complexity:45,rpg:70,coop:75,desc:"Classic Minecraft feel with 100× more bosses, biomes, and RPG quests. Lower tech ceiling means less friction. Best for groups who want adventure without heavy automation."},
-  {id:"e9",name:"Enigmatica 9",tag:"Cooperative Building",rec:false,complexity:90,rpg:60,coop:90,desc:"Build a massive high-tech/magic base together. Role specialisation is baked in — one person does Tech, one does Magic. Best for groups who love deep systems."},
-];
-
-let requests=[
-  {need:"64x Logs (any type)",offer:"Cooked food x32",who:"Pathfinder"},
-  {need:"Iron Pickaxe",offer:"Scouting report",who:"Foreman"},
-];
-
-let votes={vh:0,bmc:0,e9:0};
-
-function switchTab(t){
-  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.panel').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(el=>{if(el.getAttribute('onclick').includes("'"+t+"'"))el.classList.add('active')});
-  document.getElementById('panel-'+t).classList.add('active');
+function loadState(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(!raw)return structuredClone(defaults);
+    const parsed=JSON.parse(raw);
+    if(!parsed || typeof parsed!=='object')return structuredClone(defaults);
+    return normalizeState(parsed);
+  }catch(_){
+    return structuredClone(defaults);
+  }
 }
 
-function renderObjectives(){
-  document.getElementById('obj-list').innerHTML=objectives.map((o,i)=>`
-    <div class="obj-row">
-      <div class="obj-check ${o.done?'done':''}" onclick="toggleObj(${i})"><i class="ti ti-check"></i></div>
-      <div class="obj-text ${o.done?'done':''}">${o.text}</div>
-      <span class="obj-priority pri-${o.priority}">${o.priority.toUpperCase()}</span>
+function normalizeState(parsed){
+  const safeUsers=Array.isArray(parsed.users) && parsed.users.length
+    ? parsed.users.map((u,i)=>({
+        id:typeof u.id==='string' && u.id ? u.id : `u_${i}`,
+        name:typeof u.name==='string' && u.name ? u.name : `Operator ${i+1}`,
+        role:typeof u.role==='string' && u.role ? u.role : 'Viewer',
+        permissions:{
+          objective:{
+            add:!!(u.permissions && u.permissions.objective && u.permissions.objective.add),
+            edit:!!(u.permissions && u.permissions.objective && u.permissions.objective.edit),
+            remove:!!(u.permissions && u.permissions.objective && u.permissions.objective.remove),
+            toggle:!!(u.permissions && u.permissions.objective && u.permissions.objective.toggle)
+          }
+        }
+      }))
+    : structuredClone(defaults.users);
+
+  const safeCheckpoints=Array.isArray(parsed.checkpoints)
+    ? parsed.checkpoints.map((c,i)=>({
+        id:typeof c.id==='string'&&c.id?c.id:'cp_'+i+'_'+Date.now(),
+        title:typeof c.title==='string'&&c.title?c.title:'Checkpoint',
+        targetNote:typeof c.targetNote==='string'?c.targetNote:'',
+        done:!!c.done
+      }))
+    : structuredClone(defaults.checkpoints);
+
+  const sm=parsed.sessionMeta||{};
+  const safeSessionMeta={
+    worldLabel:typeof sm.worldLabel==='string'?sm.worldLabel:defaults.sessionMeta.worldLabel,
+    gamePreset:['minecraft','other'].includes(sm.gamePreset)?sm.gamePreset:defaults.sessionMeta.gamePreset,
+    platform:['java','bedrock','other'].includes(sm.platform)?sm.platform:defaults.sessionMeta.platform,
+    packOrMods:typeof sm.packOrMods==='string'?sm.packOrMods:defaults.sessionMeta.packOrMods,
+    defaultDimension:['overworld','nether','end','na'].includes(sm.defaultDimension)?sm.defaultDimension:defaults.sessionMeta.defaultDimension
+  };
+
+  const safeLocations=Array.isArray(parsed.locations)&&parsed.locations.length
+    ? parsed.locations.map((l,i)=>({
+        name:typeof l.name==='string'&&l.name?l.name:'Location '+(i+1),
+        category:typeof l.category==='string'&&l.category?l.category:'SPOT',
+        dimension:['overworld','nether','end','na'].includes(l.dimension)?l.dimension:'overworld',
+        x:l.x!=null&&l.x!==''?String(l.x):'?',
+        y:l.y!=null&&l.y!==''?String(l.y):'64',
+        z:l.z!=null&&l.z!==''?String(l.z):'?',
+        risk:['low','med','high'].includes(l.risk)?l.risk:'med',
+        owner:typeof l.owner==='string'&&l.owner?l.owner:'Unassigned',
+        updatedAt:typeof l.updatedAt==='number'?l.updatedAt:Date.now()
+      }))
+    : structuredClone(defaults.locations);
+
+  return {
+    ...structuredClone(defaults),
+    ...parsed,
+    command:{...defaults.command,...(parsed.command||{})},
+    votes:{...defaults.votes,...(parsed.votes||{})},
+    users:safeUsers,
+    checkpoints:safeCheckpoints,
+    sessionMeta:safeSessionMeta,
+    locations:safeLocations,
+    sitrep:typeof parsed.sitrep==='string'?parsed.sitrep:'',
+    currentUserId:parsed.currentUserId || defaults.currentUserId,
+    editingObjectiveIndex:null,
+    focusBoard:false,
+    sessionStartedAt:undefined
+  };
+}
+
+function saveLocalState(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
+function saveState(){saveLocalState(); queueCloudSync();}
+function stamp(){return Date.now();}
+function timeLabel(ts){return new Date(ts||Date.now()).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});}
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1300);
+}
+function clamp(v){return Math.min(100,Math.max(0,parseInt(v,10)||50));}
+function getCurrentUser(){return state.users.find(u=>u.id===state.currentUserId) || state.users[0];}
+function canObjective(action){
+  const user=getCurrentUser();
+  return !!(user && user.permissions && user.permissions.objective && user.permissions.objective[action]);
+}
+function requireObjective(action){
+  if(canObjective(action))return true;
+  const user=getCurrentUser();
+  showToast(`Permission denied for ${user.role}`);
+  return false;
+}
+
+function dimensionLabel(d){
+  return {overworld:'Overworld',nether:'Nether',end:'End',na:'—'}[d]||d||'—';
+}
+
+function populateSessionMeta(){
+  const m=state.sessionMeta||structuredClone(defaults.sessionMeta);
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v;};
+  set('meta-world-label',m.worldLabel||'');
+  set('meta-game-preset',m.gamePreset||'minecraft');
+  set('meta-platform',m.platform||'java');
+  set('meta-pack-mods',m.packOrMods||'');
+  set('meta-default-dimension',m.defaultDimension||'overworld');
+  syncWaypointDimensionSelect();
+}
+
+function syncWaypointDimensionSelect(){
+  const sel=document.getElementById('loc-dimension');
+  const m=state.sessionMeta||defaults.sessionMeta;
+  if(sel&&m.defaultDimension)sel.value=m.defaultDimension;
+}
+
+function saveSessionMeta(){
+  state.sessionMeta={
+    worldLabel:document.getElementById('meta-world-label').value.trim(),
+    gamePreset:document.getElementById('meta-game-preset').value,
+    platform:document.getElementById('meta-platform').value,
+    packOrMods:document.getElementById('meta-pack-mods').value.trim(),
+    defaultDimension:document.getElementById('meta-default-dimension').value
+  };
+  saveState();
+  syncWaypointDimensionSelect();
+  showToast('Session info saved');
+}
+
+function nextObjectiveSortKey(o){
+  const priOrder={crit:0,high:1,med:2};
+  const stOrder={blocked:0,active:1,idle:2,done:9};
+  return (priOrder[o.priority]??2)*10+(stOrder[o.status]??1);
+}
+
+function renderUpNext(){
+  const box=document.getElementById('up-next-list');
+  if(!box)return;
+  const open=state.objectives.filter(o=>!o.done);
+  if(!open.length){
+    box.innerHTML='<div class="shortcut-hint">No open objectives — add one below or import a plan.</div>';
+    return;
+  }
+  const sorted=[...open].sort((a,b)=>nextObjectiveSortKey(a)-nextObjectiveSortKey(b));
+  box.innerHTML=sorted.slice(0,3).map((o,i)=>`
+    <div class="up-next-row">
+      <span class="up-next-num">${i+1}.</span>
+      <div class="up-next-body">
+        <div class="up-next-title">${escapeHtml(o.text)}</div>
+        <div class="up-next-meta">
+          <span class="obj-priority pri-${o.priority}">${o.priority.toUpperCase()}</span>
+          <span class="meta-pill">${String(o.status).toUpperCase()}</span>
+          <span class="obj-owner">${escapeHtml(o.owner||'Unassigned')}</span>
+        </div>
+      </div>
     </div>`).join('');
 }
 
-function toggleObj(i){objectives[i].done=!objectives[i].done;renderObjectives();}
+function copyWaypointLine(i){
+  const l=state.locations[i];
+  if(!l)return;
+  const layer=dimensionLabel(l.dimension);
+  const line=`${l.name} (${layer}) ${l.x} ${l.y} ${l.z}`;
+  navigator.clipboard.writeText(line).then(()=>showToast('Copied coordinates')).catch(()=>showToast('Copy failed'));
+}
+
+function populateSitrep(){
+  const el=document.getElementById('sitrep-notes');
+  if(el)el.value=state.sitrep||'';
+}
+
+function saveSitrep(){
+  const el=document.getElementById('sitrep-notes');
+  if(!el)return;
+  state.sitrep=el.value;
+  saveState();
+}
+
+let sitrepDebounce=null;
+function queueSitrepSave(){
+  clearTimeout(sitrepDebounce);
+  sitrepDebounce=setTimeout(saveSitrep,450);
+}
+
+function buildMarkdownBrief(){
+  const blocked=state.objectives.find(o=>o.status==='blocked'&&!o.done);
+  const next=state.objectives.find(o=>!o.done);
+  const lines=[];
+  lines.push('# War Room — ops brief');
+  lines.push('_Export from Tactical Layer — paste anywhere._');
+  lines.push('');
+  const sm=state.sessionMeta||defaults.sessionMeta;
+  lines.push('## Session & world');
+  lines.push('- **Label:** '+(sm.worldLabel||'_Unnamed_'));
+  lines.push('- **Game:** '+(sm.gamePreset==='minecraft'?'Minecraft':'Other'));
+  if(sm.gamePreset==='minecraft'){
+    lines.push('- **Edition:** '+sm.platform);
+    lines.push('- **Pack / version:** '+(sm.packOrMods||'_—_'));
+  }else{
+    lines.push('- **Context:** '+(sm.packOrMods||'_—_'));
+  }
+  lines.push('- **Default waypoint layer:** '+dimensionLabel(sm.defaultDimension));
+  lines.push('');
+  lines.push('## Commander picture');
+  lines.push('- **Mission:** '+state.command.mission);
+  lines.push('- **Next milestone:** '+(next?next.text:state.command.milestone));
+  lines.push('- **Blocker:** '+(blocked?blocked.text:state.command.blocker));
+  lines.push('- **Session goal:** '+state.command.sessionGoal+(state.command.sessionGoalSub?' — '+state.command.sessionGoalSub:''));
+  lines.push('- **Bottleneck label:** '+state.command.bottleneckLabel+(state.command.bottleneckSub?' — '+state.command.bottleneckSub:''));
+  lines.push('');
+  lines.push('## Checkpoints');
+  if(!state.checkpoints||!state.checkpoints.length)lines.push('_None_');
+  else state.checkpoints.forEach(c=>{
+    lines.push('- ['+(c.done?'x':' ')+'] **'+c.title.replace(/\*/g,'')+'**'+(c.targetNote?' ('+c.targetNote.replace(/\*/g,'')+')':''));
+  });
+  lines.push('');
+  lines.push('## Open objectives');
+  const op=state.objectives.filter(o=>!o.done);
+  if(!op.length)lines.push('_All clear._');
+  else op.forEach(o=>{
+    lines.push('- **'+o.priority.toUpperCase()+'** ['+o.status+'] '+o.text.replace(/\*/g,'')+' _(owner: '+String(o.owner).replace(/\*/g,'')+')_');
+  });
+  lines.push('');
+  lines.push('## Supply board');
+  const req=state.requests.filter(r=>r.status==='open');
+  if(!req.length)lines.push('_No open requests._');
+  else req.forEach(r=>lines.push('- **'+r.urgency.toUpperCase()+'** Need: '+r.need+' | Offer: '+r.offer+' | '+r.who));
+  lines.push('');
+  lines.push('## Waypoints');
+  if(!state.locations||!state.locations.length)lines.push('_No pins._');
+  else state.locations.forEach(l=>{
+    lines.push('- **'+String(l.name).replace(/\*/g,'')+'** ['+String(l.risk).toUpperCase()+'] · '+dimensionLabel(l.dimension)+' · `'+String(l.x)+' '+String(l.y)+' '+String(l.z)+'` · '+String(l.category||'').replace(/\*/g,'')+' · _'+String(l.owner||'').replace(/\*/g,'')+'_');
+  });
+  lines.push('');
+  lines.push('## Situation scratch');
+  lines.push(state.sitrep&&state.sitrep.trim()?state.sitrep.trim():'_Empty._');
+  lines.push('');
+  lines.push('---');
+  lines.push('_Exported '+new Date().toISOString()+'_');
+  return lines.join('\n');
+}
+
+function copyOpsBriefMd(){
+  const md=buildMarkdownBrief();
+  navigator.clipboard.writeText(md).then(()=>showToast('Markdown brief copied')).catch(()=>showToast('Copy failed'));
+}
+
+function copySquadPing(){
+  const sm=state.sessionMeta||defaults.sessionMeta;
+  const next=state.objectives.find(o=>!o.done);
+  const blocked=state.objectives.find(o=>o.status==='blocked'&&!o.done);
+  const openReq=state.requests.filter(r=>r.status==='open');
+  const hot=openReq.filter(r=>r.urgency==='crit').length;
+  const lines=[
+    sm.worldLabel?('🌍 '+sm.worldLabel):null,
+    '🎯 '+state.command.mission,
+    next?'▸ Next: '+next.text:'✅ No open objectives',
+    blocked?'🔴 BLOCKED: '+blocked.text:null,
+    openReq.length?('📦 Supply: '+openReq.length+' open'+(hot?' ('+hot+' CRIT)':'')):null,
+    '',
+    '📎 '+String(window.location.href).split('#')[0]
+  ].filter(Boolean);
+  navigator.clipboard.writeText(lines.join('\n')).then(()=>showToast('Squad ping copied')).catch(()=>showToast('Copy failed'));
+}
+
+function renderCheckpoints(){
+  const rail=document.getElementById('checkpoint-rail');
+  if(!rail)return;
+  if(!state.checkpoints||!state.checkpoints.length){
+    rail.innerHTML='<div class="shortcut-hint" style="padding:10px 0">No checkpoints yet — add a few for this season (first base, iron, nether, boss, mod age…).</div>';
+    return;
+  }
+  rail.innerHTML=state.checkpoints.map((c,i)=>`
+    <div class="checkpoint-node ${c.done?'done':''}">
+      <div class="cp-title">${escapeHtml(c.title)}</div>
+      <div class="cp-note">${escapeHtml(c.targetNote||'')||'—'}</div>
+      <div class="cp-actions">
+        <button type="button" class="btn btn-sm" onclick="toggleCheckpoint(${i})">${c.done?'Reopen':'Mark done'}</button>
+        <button type="button" class="btn btn-sm btn-danger" onclick="removeCheckpoint(${i})">Remove</button>
+      </div>
+    </div>`).join('');
+}
+
+function addCheckpoint(){
+  const t=document.getElementById('cp-title').value.trim();
+  if(!t)return showToast('Add a checkpoint title');
+  const note=document.getElementById('cp-note').value.trim();
+  if(!state.checkpoints)state.checkpoints=[];
+  state.checkpoints.push({id:'cp_'+Date.now(),title:t,targetNote:note,done:false});
+  document.getElementById('cp-title').value='';
+  document.getElementById('cp-note').value='';
+  saveState();
+  renderCheckpoints();
+  showToast('Checkpoint added');
+}
+
+function toggleCheckpoint(i){
+  const c=state.checkpoints&&state.checkpoints[i];
+  if(!c)return;
+  c.done=!c.done;
+  saveState();
+  renderCheckpoints();
+}
+
+function removeCheckpoint(i){
+  if(!state.checkpoints)return;
+  state.checkpoints.splice(i,1);
+  saveState();
+  renderCheckpoints();
+}
+
+function getMissionCollapseMap(){
+  try{
+    const raw=localStorage.getItem(MISSION_COLLAPSE_KEY);
+    const o=raw?JSON.parse(raw):{};
+    return o&&typeof o==='object'?o:{};
+  }catch(e){
+    return {};
+  }
+}
+function setMissionCollapseMap(map){
+  try{localStorage.setItem(MISSION_COLLAPSE_KEY,JSON.stringify(map));}catch(e){}
+}
+function applyMissionSectionUI(key){
+  const el=document.querySelector('[data-mission-section="'+key+'"]');
+  if(!el)return;
+  const collapsed=!!getMissionCollapseMap()[key];
+  el.classList.toggle('is-collapsed',collapsed);
+  const btn=el.querySelector('.collapse-toggle');
+  if(btn)btn.setAttribute('aria-expanded',collapsed?'false':'true');
+  const g=el.querySelector('.collapse-glyph');
+  if(g)g.textContent=collapsed?'+':'−';
+}
+function toggleMissionSection(key){
+  const m=getMissionCollapseMap();
+  m[key]=!m[key];
+  setMissionCollapseMap(m);
+  applyMissionSectionUI(key);
+}
+function initMissionCollapse(){
+  document.querySelectorAll('[data-mission-section]').forEach(sec=>{
+    applyMissionSectionUI(sec.getAttribute('data-mission-section'));
+  });
+}
+function openSideDrawer(){
+  const d=document.getElementById('side-drawer');
+  const b=document.getElementById('drawer-backdrop');
+  const hb=document.getElementById('btn-drawer-open');
+  if(d)d.classList.add('is-open');
+  if(b){b.classList.add('is-open');b.setAttribute('aria-hidden','false');}
+  if(d)d.setAttribute('aria-hidden','false');
+  if(hb)hb.setAttribute('aria-expanded','true');
+  document.body.style.overflow='hidden';
+}
+function closeSideDrawer(){
+  const d=document.getElementById('side-drawer');
+  const b=document.getElementById('drawer-backdrop');
+  const hb=document.getElementById('btn-drawer-open');
+  if(d)d.classList.remove('is-open');
+  if(b){b.classList.remove('is-open');b.setAttribute('aria-hidden','true');}
+  if(d)d.setAttribute('aria-hidden','true');
+  if(hb)hb.setAttribute('aria-expanded','false');
+  document.body.style.overflow='';
+}
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el=>{if(el.getAttribute('onclick').includes("'"+t+"'"))el.classList.add('active');});
+  document.getElementById('panel-'+t).classList.add('active');
+  closeSideDrawer();
+}
+
+function toggleCommandMode(){
+  state.commandMode=!state.commandMode;
+  applyLayoutClasses();
+  saveState();
+  showToast(state.commandMode?'Command mode enabled':'Command mode disabled');
+}
+
+function applyLayoutClasses(){
+  const root=document.querySelector('.war-room');
+  if(!root)return;
+  root.classList.toggle('command-mode',!!state.commandMode);
+}
+
+function renderCommand(){
+  document.getElementById('cmd-mission').textContent=state.command.mission;
+  const blocker=state.objectives.find(o=>o.status==='blocked' && !o.done);
+  document.getElementById('cmd-blocker').textContent=blocker?blocker.text:state.command.blocker;
+  const next=state.objectives.find(o=>!o.done);
+  document.getElementById('cmd-milestone').textContent=next?next.text:state.command.milestone;
+  renderActiveUser();
+  renderOverview();
+}
+
+function renderOverview(){
+  const total=state.objectives.length;
+  const done=state.objectives.filter(o=>o.done).length;
+  const open=state.objectives.filter(o=>!o.done).length;
+  const pct=total?Math.round((done/total)*100):0;
+  const progEl=document.getElementById('kpi-progress-label');
+  const bar=document.getElementById('mission-progress-fill');
+  if(progEl)progEl.textContent=`${pct}% complete · ${done} / ${total}`;
+  if(bar)bar.style.width=pct+'%';
+  const sg=document.getElementById('kpi-session-goal');
+  const ss=document.getElementById('kpi-session-sub');
+  const bt=document.getElementById('kpi-bottleneck');
+  const bs=document.getElementById('kpi-bottleneck-sub');
+  if(sg)sg.textContent=state.command.sessionGoal||'—';
+  if(ss)ss.textContent=state.command.sessionGoalSub||'';
+  if(bt)bt.textContent=state.command.bottleneckLabel||'—';
+  if(bs)bs.textContent=state.command.bottleneckSub||'';
+}
+
+function populateBriefFields(){
+  if(document.activeElement && document.activeElement.closest && document.activeElement.closest('.brief-card'))return;
+  const m=document.getElementById('brief-mission');
+  if(!m)return;
+  m.value=state.command.mission||'';
+  document.getElementById('brief-milestone').value=state.command.milestone||'';
+  document.getElementById('brief-blocker').value=state.command.blocker||'';
+  document.getElementById('brief-session-goal').value=state.command.sessionGoal||'';
+  document.getElementById('brief-session-sub').value=state.command.sessionGoalSub||'';
+  document.getElementById('brief-bottleneck').value=state.command.bottleneckLabel||'';
+  document.getElementById('brief-bottleneck-sub').value=state.command.bottleneckSub||'';
+}
+
+function saveMissionBrief(){
+  state.command.mission=document.getElementById('brief-mission').value.trim()||state.command.mission;
+  state.command.milestone=document.getElementById('brief-milestone').value.trim()||state.command.milestone;
+  state.command.blocker=document.getElementById('brief-blocker').value.trim()||state.command.blocker;
+  state.command.sessionGoal=document.getElementById('brief-session-goal').value.trim()||state.command.sessionGoal;
+  state.command.sessionGoalSub=document.getElementById('brief-session-sub').value.trim();
+  state.command.bottleneckLabel=document.getElementById('brief-bottleneck').value.trim()||state.command.bottleneckLabel;
+  state.command.bottleneckSub=document.getElementById('brief-bottleneck-sub').value.trim();
+  saveState();
+  renderCommand();
+  showToast('Brief saved');
+}
+
+function updateCloudPill(){
+  const el=document.getElementById('cloud-pill');
+  if(!el)return;
+  el.classList.remove('cloud-pill-ok','cloud-pill-bad','cloud-pill-local');
+  if(remote.connected){
+    el.classList.add('cloud-pill-ok');
+    el.textContent=(remote.workspaceId||'LIVE').slice(0,18)+(remote.workspaceId&&remote.workspaceId.length>18?'…':'');
+    el.title='Cloud connected · '+remote.workspaceId;
+  }else{
+    el.classList.add('cloud-pill-local');
+    el.textContent='LOCAL';
+    el.title='Local only — use Admin to connect';
+  }
+}
+
+function tickClock(){
+  const el=document.getElementById('header-clock');
+  if(!el)return;
+  const d=new Date();
+  el.textContent=d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+function renderObjectives(){
+  const list=state.objectives.map((o,i)=>{
+    if(state.editingObjectiveIndex===i){
+      return `<div class="obj-row">
+        <div class="obj-edit-row">
+          <input type="text" id="edit-obj-text" value="${escapeHtml(o.text)}">
+          <input type="text" id="edit-obj-owner" value="${escapeHtml(o.owner||'Unassigned')}">
+          <select id="edit-obj-priority">
+            <option value="crit" ${o.priority==='crit'?'selected':''}>CRIT</option>
+            <option value="high" ${o.priority==='high'?'selected':''}>HIGH</option>
+            <option value="med" ${o.priority==='med'?'selected':''}>MED</option>
+          </select>
+          <select id="edit-obj-status">
+            <option value="active" ${o.status==='active'?'selected':''}>ACTIVE</option>
+            <option value="blocked" ${o.status==='blocked'?'selected':''}>BLOCKED</option>
+            <option value="idle" ${o.status==='idle'?'selected':''}>IDLE</option>
+            <option value="done" ${o.status==='done'?'selected':''}>DONE</option>
+          </select>
+          <button class="btn btn-sm" onclick="saveObjectiveEdit(${i})">Save</button>
+          <button class="btn btn-sm btn-danger" onclick="cancelObjectiveEdit()">Cancel</button>
+        </div>
+      </div>`;
+    }
+    return `<div class="obj-row">
+      <div class="obj-check ${o.done?'done':''}" onclick="toggleObj(${i})"><i class="ti ti-check"></i></div>
+      <div style="flex:1">
+        <div class="obj-text ${o.done?'done':''}">${o.text}</div>
+        <div class="obj-meta">
+          <span class="obj-owner">Owner: ${o.owner||'Unassigned'}</span>
+          <span class="meta-pill">${o.status.toUpperCase()}</span>
+          <span class="obj-updated">Updated ${timeLabel(o.updatedAt)}</span>
+        </div>
+      </div>
+      <span class="obj-priority pri-${o.priority}">${o.priority.toUpperCase()}</span>
+      <div class="obj-actions">
+        <button class="btn btn-sm" onclick="startObjectiveEdit(${i})" ${canObjective('edit')?'':'disabled'}>Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="removeObjective(${i})" ${canObjective('remove')?'':'disabled'}>Remove</button>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('obj-list').innerHTML=list||'<div class="shortcut-hint">No objectives yet.</div>';
+  document.getElementById('kpi-open-objectives').textContent=String(state.objectives.filter(o=>!o.done).length);
+  renderOverview();
+  renderUpNext();
+}
+
+function toggleObj(i){
+  if(!requireObjective('toggle'))return;
+  state.objectives[i].done=!state.objectives[i].done;
+  state.objectives[i].status=state.objectives[i].done?'done':state.objectives[i].status;
+  state.objectives[i].updatedAt=stamp();
+  saveState();
+  renderObjectives();
+  renderCommand();
+}
+
+function addObjective(){
+  if(!requireObjective('add'))return;
+  const text=document.getElementById('obj-text').value.trim();
+  if(!text)return;
+  state.objectives.push({
+    text,
+    owner:document.getElementById('obj-owner').value.trim()||'Unassigned',
+    priority:document.getElementById('obj-priority').value||'high',
+    status:'active',
+    done:false,
+    updatedAt:stamp()
+  });
+  ['obj-text','obj-owner'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('obj-priority').value='high';
+  saveState();
+  renderObjectives();
+  renderCommand();
+  showToast('Objective added');
+}
+
+function startObjectiveEdit(i){
+  if(!requireObjective('edit'))return;
+  state.editingObjectiveIndex=i;
+  renderObjectives();
+}
+
+function cancelObjectiveEdit(){
+  state.editingObjectiveIndex=null;
+  renderObjectives();
+}
+
+function saveObjectiveEdit(i){
+  if(!requireObjective('edit'))return;
+  const text=document.getElementById('edit-obj-text').value.trim();
+  if(!text)return showToast('Objective text required');
+  state.objectives[i].text=text;
+  state.objectives[i].owner=document.getElementById('edit-obj-owner').value.trim()||'Unassigned';
+  state.objectives[i].priority=document.getElementById('edit-obj-priority').value;
+  state.objectives[i].status=document.getElementById('edit-obj-status').value;
+  state.objectives[i].done=state.objectives[i].status==='done';
+  state.objectives[i].updatedAt=stamp();
+  state.editingObjectiveIndex=null;
+  saveState();
+  renderObjectives();
+  renderCommand();
+  showToast('Objective updated');
+}
+
+function removeObjective(i){
+  if(!requireObjective('remove'))return;
+  state.objectives.splice(i,1);
+  saveState();
+  renderObjectives();
+  renderCommand();
+  showToast('Objective removed');
+}
+
+function renderActiveUser(){
+  const sel=document.getElementById('active-user');
+  if(!sel)return;
+  if(!Array.isArray(state.users) || !state.users.length){
+    state.users=structuredClone(defaults.users);
+    state.currentUserId=state.users[0].id;
+  }
+  sel.innerHTML=state.users.map(u=>`<option value="${u.id}" ${u.id===state.currentUserId?'selected':''}>${u.name} (${u.role})</option>`).join('');
+  const user=getCurrentUser();
+  if(!user || !user.permissions || !user.permissions.objective){
+    state.users=structuredClone(defaults.users);
+    state.currentUserId=state.users[0].id;
+    saveLocalState();
+    return renderActiveUser();
+  }
+  const p=user.permissions.objective;
+  document.getElementById('active-user-role').textContent=`Role: ${user.role} | Objective perms: add ${p.add?'Y':'N'}, edit ${p.edit?'Y':'N'}, remove ${p.remove?'Y':'N'}, toggle ${p.toggle?'Y':'N'}`;
+}
+
+function setActiveUser(id){
+  state.currentUserId=id;
+  state.editingObjectiveIndex=null;
+  saveState();
+  renderCommand();
+  renderObjectives();
+  showToast(`Switched to ${getCurrentUser().name}`);
+}
+
+function escapeHtml(v){
+  return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function setCloudStatus(text,type=''){
+  const el=document.getElementById('cloud-status');
+  if(!el)return;
+  el.textContent=text;
+  el.classList.remove('ok','bad');
+  if(type)el.classList.add(type);
+  const pill=document.getElementById('cloud-pill');
+  if(pill && type==='bad'){pill.classList.remove('cloud-pill-ok','cloud-pill-local');pill.classList.add('cloud-pill-bad');pill.textContent='SYNC ERR';}
+  else updateCloudPill();
+}
+
+function setDiagnostics(lines){
+  const el=document.getElementById('admin-diagnostics');
+  if(!el)return;
+  el.textContent=lines.join('\n');
+}
+
+function loadRemoteConfig(){
+  try{
+    const cfg=JSON.parse(localStorage.getItem(REMOTE_CONFIG_KEY)||'{}');
+    remote.url=cfg.url||'';
+    remote.anonKey=cfg.anonKey||'';
+    remote.workspaceId=cfg.workspaceId||'';
+    remote.accessKey=cfg.accessKey||'';
+  }catch(_){}
+}
+
+function persistRemoteConfig(){
+  localStorage.setItem(REMOTE_CONFIG_KEY,JSON.stringify({
+    url:remote.url,
+    anonKey:remote.anonKey,
+    workspaceId:remote.workspaceId,
+    accessKey:remote.accessKey
+  }));
+}
+
+function populateCloudFields(){
+  document.getElementById('cloud-url').value=remote.url;
+  document.getElementById('cloud-key').value=remote.anonKey;
+  document.getElementById('cloud-workspace').value=remote.workspaceId;
+  document.getElementById('cloud-access-key').value=remote.accessKey;
+}
+
+function boardPayload(){
+  return {
+    ...state,
+    editingObjectiveIndex:null
+  };
+}
+
+function queueCloudSync(){
+  if(!remote.connected || !remote.client || remote.isPushing)return;
+  if(remote.syncTimer)clearTimeout(remote.syncTimer);
+  remote.syncTimer=setTimeout(()=>{pushCloudState();},350);
+}
+
+async function pushCloudState(){
+  if(!remote.connected || !remote.client)return;
+  try{
+    remote.isPushing=true;
+    const payload=boardPayload();
+    const {error}=await remote.client.from('war_room_boards').upsert({
+      workspace_id:remote.workspaceId,
+      access_key:remote.accessKey,
+      data:payload,
+      updated_at:new Date().toISOString()
+    },{onConflict:'workspace_id'});
+    if(error)throw error;
+    remote.lastRemoteAt=Date.now();
+    setCloudStatus(`Cloud: synced ${timeLabel(remote.lastRemoteAt)}`,'ok');
+  }catch(_){
+    setCloudStatus('Cloud: sync error','bad');
+  }finally{
+    remote.isPushing=false;
+  }
+}
+
+async function fetchCloudState(){
+  const {data,error}=await remote.client.from('war_room_boards').select('data,updated_at').eq('workspace_id',remote.workspaceId).maybeSingle();
+  if(error)throw error;
+  if(data && data.data){
+    state=normalizeState(data.data);
+    saveLocalState();
+    init();
+  }else{
+    await pushCloudState();
+  }
+}
+
+function subscribeCloud(){
+  if(remote.channel){
+    remote.client.removeChannel(remote.channel);
+    remote.channel=null;
+  }
+  remote.channel=remote.client.channel(`war_room_${remote.workspaceId}`)
+    .on('postgres_changes',{
+      event:'*',
+      schema:'public',
+      table:'war_room_boards',
+      filter:`workspace_id=eq.${remote.workspaceId}`
+    },(payload)=>{
+      if(remote.isPushing)return;
+      const incoming=payload.new && payload.new.data;
+      if(!incoming)return;
+      state=normalizeState(incoming);
+      saveLocalState();
+      init();
+      setCloudStatus(`Cloud: update received ${timeLabel(Date.now())}`,'ok');
+    })
+    .subscribe();
+}
+
+async function connectCloud(){
+  const url=document.getElementById('cloud-url').value.trim();
+  const anonKey=document.getElementById('cloud-key').value.trim();
+  const workspaceId=document.getElementById('cloud-workspace').value.trim();
+  const accessKey=document.getElementById('cloud-access-key').value.trim();
+  if(!url || !anonKey || !workspaceId || !accessKey){
+    setCloudStatus('Cloud: missing URL/key/workspace/access key','bad');
+    setDiagnostics([
+      'Status: failed',
+      `URL: ${url ? 'ok' : 'missing'}`,
+      `Anon Key: ${anonKey ? 'ok' : 'missing'}`,
+      `Workspace ID: ${workspaceId ? 'ok' : 'missing'}`,
+      `Access Key: ${accessKey ? 'ok' : 'missing'}`
+    ]);
+    return;
+  }
+  const supabaseLib=(window.supabase && window.supabase.createClient)
+    ? window.supabase
+    : (window.supabaseClient && window.supabaseClient.createClient ? window.supabaseClient : null);
+  if(!supabaseLib){
+    setCloudStatus('Cloud: Supabase client unavailable','bad');
+    setDiagnostics(['Status: failed','Supabase CDN client was not found in window scope.']);
+    return;
+  }
+  try{
+    remote.url=url;remote.anonKey=anonKey;remote.workspaceId=workspaceId;remote.accessKey=accessKey;
+    remote.client=supabaseLib.createClient(url,anonKey,{
+      global:{headers:{'x-war-room-key':accessKey}}
+    });
+    remote.connected=true;
+    persistRemoteConfig();
+    await fetchCloudState();
+    subscribeCloud();
+    setCloudStatus(`Cloud: connected to ${workspaceId}`,'ok');
+    setDiagnostics([
+      'Status: connected',
+      `Workspace: ${workspaceId}`,
+      `Project URL: ${url}`,
+      `Last sync: ${timeLabel(Date.now())}`
+    ]);
+    showToast('Cloud connected');
+    updateCloudPill();
+    if(window.location.hash.includes('join=1')){
+      history.replaceState(null,'',window.location.pathname+window.location.search);
+    }
+  }catch(_){
+    remote.connected=false;
+    remote.client=null;
+    setCloudStatus('Cloud: connection failed (check table/policies)','bad');
+    setDiagnostics([
+      'Status: failed',
+      'Could not connect or fetch board row.',
+      'Check Supabase URL, anon key, workspace id, access key, and RLS policies.'
+    ]);
+  }
+}
+
+function disconnectCloud(){
+  if(remote.channel && remote.client)remote.client.removeChannel(remote.channel);
+  remote.channel=null;
+  remote.client=null;
+  remote.connected=false;
+  if(remote.syncTimer)clearTimeout(remote.syncTimer);
+  setCloudStatus('Cloud: local mode only');
+  setDiagnostics(['Status: local only','Cloud disconnected.']);
+  updateCloudPill();
+  showToast('Cloud disconnected');
+}
+
+function copyJoinLink(){
+  const workspaceId=document.getElementById('cloud-workspace').value.trim();
+  const accessKey=document.getElementById('cloud-access-key').value.trim();
+  if(!workspaceId||!accessKey){showToast('Set workspace + access key first');return;}
+  const base=`${window.location.origin}${window.location.pathname}`;
+  const link=`${base}#join=1&ws=${encodeURIComponent(workspaceId)}&ak=${encodeURIComponent(accessKey)}`;
+  navigator.clipboard.writeText(link).then(()=>{
+    showToast('Join link copied');
+    setDiagnostics(['Join link copied (share only with squad).','Workspace: '+workspaceId]);
+  }).catch(()=>showToast('Copy failed — copy URL manually'));
+}
+
+function tryAutoJoinFromHash(){
+  const h=window.location.hash.slice(1);
+  if(!h)return false;
+  const params=new URLSearchParams(h.replace(/^#/,''));
+  if(params.get('join')!=='1')return false;
+  const ws=params.get('ws');
+  const ak=params.get('ak');
+  if(!ws||!ak)return false;
+  document.getElementById('cloud-workspace').value=ws;
+  document.getElementById('cloud-access-key').value=ak;
+  remote.workspaceId=ws;
+  remote.accessKey=ak;
+  persistRemoteConfig();
+  populateCloudFields();
+  switchTab('admin');
+  setTimeout(()=>connectCloud(),300);
+  return true;
+}
+
+async function runCloudDiagnostics(){
+  const url=document.getElementById('cloud-url').value.trim();
+  const anonKey=document.getElementById('cloud-key').value.trim();
+  const workspaceId=document.getElementById('cloud-workspace').value.trim();
+  const accessKey=document.getElementById('cloud-access-key').value.trim();
+  const checks=[
+    `URL: ${url ? 'ok' : 'missing'}`,
+    `Anon Key: ${anonKey ? 'ok' : 'missing'}`,
+    `Workspace ID: ${workspaceId ? 'ok' : 'missing'}`,
+    `Access Key: ${accessKey ? 'ok' : 'missing'}`
+  ];
+  if(!(url && anonKey && workspaceId && accessKey)){
+    setDiagnostics(['Status: incomplete config',...checks]);
+    return;
+  }
+  setDiagnostics(['Status: testing...',...checks]);
+  await connectCloud();
+}
 
 function renderRoles(){
-  document.getElementById('roles-list').innerHTML=roles.map((r,i)=>`
+  document.getElementById('roles-list').innerHTML=state.roles.map(r=>`
     <div class="role-card">
       <div class="role-icon">${r.icon}</div>
       <div>
@@ -307,50 +1563,140 @@ function renderRoles(){
     </div>`).join('');
 }
 
+function renderLocations(){
+  const rows=state.locations.map((l,i)=>`
+    <tr>
+      <td>${escapeHtml(l.name)}</td>
+      <td><span class="status-badge badge-idle">${escapeHtml(l.category)}</span></td>
+      <td><span class="meta-pill">${escapeHtml(dimensionLabel(l.dimension))}</span></td>
+      <td class="coord">${escapeHtml(l.x)} / ${escapeHtml(l.y)} / ${escapeHtml(l.z)}</td>
+      <td><span class="meta-pill">${l.risk.toUpperCase()}</span></td>
+      <td>${escapeHtml(l.owner||'Unassigned')}</td>
+      <td style="color:#5a8a5a">${timeLabel(l.updatedAt)}</td>
+      <td><button type="button" class="btn btn-sm wp-copy" onclick="copyWaypointLine(${i})" title="Copy for Discord">Copy</button></td>
+    </tr>`).join('');
+  document.getElementById('coords-table').innerHTML=rows||'<tr><td colspan="8" style="text-align:center;color:#5a8a5a">No waypoints logged.</td></tr>';
+}
+
+function addCoord(){
+  const name=document.getElementById('loc-name').value.trim();
+  if(!name)return;
+  state.locations.push({
+    name,
+    category:(document.getElementById('loc-cat').value.trim()||'WAYPOINT').toUpperCase(),
+    dimension:document.getElementById('loc-dimension').value||'overworld',
+    x:document.getElementById('loc-x').value.trim()||'?',
+    y:document.getElementById('loc-y').value.trim()||'64',
+    z:document.getElementById('loc-z').value.trim()||'?',
+    risk:document.getElementById('loc-risk').value||'med',
+    owner:document.getElementById('loc-owner').value.trim()||'Unassigned',
+    updatedAt:stamp()
+  });
+  ['loc-name','loc-x','loc-z','loc-cat','loc-owner'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('loc-y').value='64';
+  document.getElementById('loc-risk').value='med';
+  syncWaypointDimensionSelect();
+  saveState();
+  renderLocations();
+  showToast('Location logged');
+}
+
 function renderRequests(){
   const el=document.getElementById('requests-list');
-  if(!requests.length){el.innerHTML='<div style="font-family:\'Share Tech Mono\',monospace;font-size:11px;color:#3a5a3a;padding:12px 0;text-align:center">// NO ACTIVE REQUESTS — POST ONE BELOW</div>';return;}
-  el.innerHTML=requests.map((r,i)=>`
+  if(!state.requests.length){
+    el.innerHTML='<div style="font-family:\'Share Tech Mono\',monospace;font-size:13px;color:#3a5a3a;padding:16px 0;text-align:center">// NO ACTIVE REQUESTS — POST ONE BELOW</div>';
+    return;
+  }
+  el.innerHTML=state.requests.map((r,i)=>`
     <div class="req-item">
-      <span style="font-size:16px">📥</span>
+      <span style="font-size:18px">📥</span>
       <div class="req-need">${r.need}</div>
-      <span style="font-size:9px;color:#5a8a5a;font-family:'Share Tech Mono',monospace">OFFER:</span>
+      <span style="font-size:10px;color:#5a8a5a;font-family:'Share Tech Mono',monospace">OFFER:</span>
       <div class="req-offer">${r.offer}</div>
       <div class="req-who">${r.who}</div>
+      <span class="obj-priority pri-${r.urgency}">${r.urgency.toUpperCase()}</span>
+      <span class="meta-pill">${r.status.toUpperCase()}</span>
+      <span class="obj-updated">${timeLabel(r.updatedAt)}</span>
       <button class="remove-btn" onclick="removeReq(${i})" title="Mark fulfilled">×</button>
     </div>`).join('');
 }
 
 function addRequest(){
   const need=document.getElementById('req-need').value.trim();
-  const offer=document.getElementById('req-offer').value.trim();
-  const who=document.getElementById('req-who').value.trim();
   if(!need)return;
-  requests.push({need,offer:offer||'Nothing yet',who:who||'???'});
-  renderRequests();
+  state.requests.push({
+    need,
+    offer:document.getElementById('req-offer').value.trim()||'Nothing yet',
+    who:document.getElementById('req-who').value.trim()||'Unassigned',
+    urgency:document.getElementById('req-urgency').value||'med',
+    status:'open',
+    updatedAt:stamp()
+  });
   ['req-need','req-offer','req-who'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('req-urgency').value='med';
+  saveState();
+  renderRequests();
+  showToast('Request posted');
 }
 
-function removeReq(i){requests.splice(i,1);renderRequests();}
+function removeReq(i){
+  state.requests.splice(i,1);
+  saveState();
+  renderRequests();
+}
 
-function addCoord(){
-  const name=document.getElementById('loc-name').value.trim();
-  const x=document.getElementById('loc-x').value.trim()||'?';
-  const y=document.getElementById('loc-y').value.trim()||'?';
-  const z=document.getElementById('loc-z').value.trim()||'?';
+function addModpack(){
+  const name=document.getElementById('mp-name').value.trim();
   if(!name)return;
-  const tr=document.createElement('tr');
-  tr.innerHTML=`<td>${name}</td><td><span class="status-badge badge-idle">WAYPOINT</span></td><td class="coord">${x} / ${y} / ${z}</td><td style="color:#5a8a5a">Logged</td>`;
-  document.getElementById('coords-table').appendChild(tr);
-  ['loc-name','loc-x','loc-y','loc-z'].forEach(id=>document.getElementById(id).value='');
+  const id='mp_'+Date.now();
+  state.modpacks.push({
+    id,
+    name,
+    tag:document.getElementById('mp-tag').value.trim()||'Custom Pack',
+    rec:false,
+    complexity:clamp(document.getElementById('mp-complexity').value),
+    rpg:clamp(document.getElementById('mp-rpg').value),
+    coop:clamp(document.getElementById('mp-coop').value),
+    desc:document.getElementById('mp-desc').value.trim()||'No description added yet.'
+  });
+  state.votes[id]=0;
+  ['mp-name','mp-tag','mp-desc','mp-complexity','mp-rpg','mp-coop'].forEach(id=>document.getElementById(id).value='');
+  saveState();
+  renderModpacks();
+  renderVoteSelect();
+  renderVotes();
+  showToast('Modpack added');
+}
+
+function removeModpack(id){
+  state.modpacks=state.modpacks.filter(m=>m.id!==id);
+  delete state.votes[id];
+  saveState();
+  renderModpacks();
+  renderVoteSelect();
+  renderVotes();
+}
+
+function setRecommended(id){
+  state.modpacks.forEach(m=>m.rec=(m.id===id));
+  saveState();
+  renderModpacks();
 }
 
 function renderModpacks(){
-  document.getElementById('modpacks-list').innerHTML=modpacks.map(m=>`
+  document.getElementById('modpacks-list').innerHTML=state.modpacks.map(m=>`
     <div class="modpack-card ${m.rec?'recommended':''}">
-      ${m.rec?'<span class="rec-badge">★ SQUAD RECOMMENDATION</span><br>':''}
-      <div class="modpack-name">${m.name}</div>
-      <div class="modpack-tag">${m.tag}</div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px">
+        <div>
+          ${m.rec?'<span class="rec-badge">★ SQUAD RECOMMENDATION</span><br>':''}
+          <div class="modpack-name">${m.name}</div>
+          <div class="modpack-tag">${m.tag}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;margin-top:4px">
+          ${!m.rec?`<button class="btn btn-sm" onclick="setRecommended('${m.id}')" title="Set as recommended">★ PICK</button>`:''}
+          <button class="btn btn-sm btn-danger" onclick="removeModpack('${m.id}')" title="Remove modpack">✕ REMOVE</button>
+        </div>
+      </div>
       <div class="modpack-desc">${m.desc}</div>
       <div class="rating-row"><span class="rating-name">Complexity</span><div class="rating-bar"><div class="rating-fill fill-amber" style="width:${m.complexity}%"></div></div><span class="rating-num">${m.complexity}%</span></div>
       <div class="rating-row"><span class="rating-name">RPG Depth</span><div class="rating-bar"><div class="rating-fill fill-green" style="width:${m.rpg}%"></div></div><span class="rating-num">${m.rpg}%</span></div>
@@ -358,30 +1704,156 @@ function renderModpacks(){
     </div>`).join('');
 }
 
+function renderVoteSelect(){
+  const sel=document.getElementById('vote-select');
+  sel.innerHTML='<option value="">-- Cast your vote --</option>'+state.modpacks.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+}
+
 function renderVotes(){
-  const total=votes.vh+votes.bmc+votes.e9||1;
-  const names={vh:'Vault Hunters',bmc:'Better MC (BMC4)',e9:'Enigmatica 9'};
-  document.getElementById('vote-results').innerHTML=Object.keys(votes).map(k=>`
-    <div class="vote-row">
-      <span class="vote-label">${names[k]}</span>
-      <div class="vote-bar-wrap"><div class="vote-bar-fill" style="width:${Math.round(votes[k]/total*100)}%"></div></div>
-      <span class="vote-count">${votes[k]} vote${votes[k]!==1?'s':''}</span>
-    </div>`).join('');
+  const totalVotes=Object.values(state.votes).reduce((a,b)=>a+b,0);
+  document.getElementById('vote-results').innerHTML=state.modpacks.map(m=>{
+    const count=state.votes[m.id]||0;
+    const pct=totalVotes?Math.round((count/totalVotes)*100):0;
+    return `<div class="vote-row">
+      <span class="vote-label">${m.name.length>20?m.name.substring(0,18)+'…':m.name}</span>
+      <div class="vote-bar-wrap"><div class="vote-bar-fill" style="width:${pct}%"></div></div>
+      <span class="vote-count">${count} vote${count!==1?'s':''}</span>
+    </div>`;
+  }).join('') || '<div class="shortcut-hint">No strategy packs yet.</div>';
 }
 
 function castVote(){
   const v=document.getElementById('vote-select').value;
   if(!v)return;
-  votes[v]++;
+  state.votes[v]=(state.votes[v]||0)+1;
+  saveState();
   renderVotes();
   document.getElementById('vote-select').value='';
 }
 
-renderObjectives();
-renderRoles();
-renderRequests();
-renderModpacks();
-renderVotes();
+function exportPlan(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='war-room-plan.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('Plan exported');
+}
+
+function importPlan(ev){
+  const file=ev.target.files[0];
+  if(!file)return;
+  const fr=new FileReader();
+  fr.onload=()=>{
+    try{
+      const imported=JSON.parse(fr.result);
+      state=normalizeState(imported);
+      saveState();
+      init();
+      showToast('Plan imported');
+    }catch(_){
+      showToast('Import failed');
+    }
+    ev.target.value='';
+  };
+  fr.readAsText(file);
+}
+
+function resetBoard(){
+  if(!confirm('Reset board to defaults? This cannot be undone.'))return;
+  state=structuredClone(defaults);
+  saveState();
+  init();
+  showToast('Board reset');
+}
+
+function bindShortcuts(){
+  document.addEventListener('keydown',(e)=>{
+    if(['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName) && e.key!=='Escape')return;
+    if(e.key>='1'&&e.key<='6'){
+      ['objectives','roles','logistics','requests','modpack','admin'].forEach((tab,i)=>{if(String(i+1)===e.key)switchTab(tab);});
+    }else if(e.key.toLowerCase()==='n'){
+      switchTab('objectives');document.getElementById('obj-text').focus();
+    }else if(e.key.toLowerCase()==='l'){
+      switchTab('logistics');document.getElementById('loc-name').focus();
+    }else if(e.key.toLowerCase()==='r'){
+      switchTab('requests');document.getElementById('req-need').focus();
+    }
+  });
+
+  ['req-who','obj-owner','loc-owner','mp-coop','cp-title'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.addEventListener('keydown',(e)=>{
+      if(e.key!=='Enter')return;
+      if(id.startsWith('req'))addRequest();
+      if(id.startsWith('obj'))addObjective();
+      if(id.startsWith('loc'))addCoord();
+      if(id.startsWith('mp'))addModpack();
+      if(id==='cp-title')addCheckpoint();
+    });
+  });
+}
+
+function init(){
+  if(typeof state.editingObjectiveIndex==='undefined')state.editingObjectiveIndex=null;
+  applyLayoutClasses();
+  populateBriefFields();
+  populateSessionMeta();
+  populateSitrep();
+  initMissionCollapse();
+  renderCommand();
+  renderObjectives();
+  renderRoles();
+  renderLocations();
+  renderRequests();
+  renderModpacks();
+  renderVoteSelect();
+  renderVotes();
+  renderCheckpoints();
+  updateCloudPill();
+}
+
+function boot(){
+  try{
+    document.addEventListener('keydown',e=>{
+      if(e.key==='Escape')closeSideDrawer();
+    });
+    loadRemoteConfig();
+    bindShortcuts();
+    tickClock();
+    setInterval(tickClock,1000);
+    init();
+    populateCloudFields();
+    const sn=document.getElementById('sitrep-notes');
+    if(sn)sn.addEventListener('input',queueSitrepSave);
+    const joinedFromLink=tryAutoJoinFromHash();
+    if(joinedFromLink){
+      setDiagnostics(['Join link detected — opening Admin and connecting…']);
+    }else if(remote.url && remote.anonKey && remote.workspaceId){
+      if(!remote.accessKey){
+        setCloudStatus('Cloud: add access key, then click Connect','bad');
+        setDiagnostics(['Status: local mode','Add workspace access key, then Connect Cloud.']);
+      }else{
+        setCloudStatus(`Cloud: ready for workspace "${remote.workspaceId}" (click Connect)`);
+        setDiagnostics(['Status: ready','Click Connect Cloud in Admin when you want live sync.']);
+      }
+    }else{
+      setCloudStatus('Cloud: local mode only (fill fields, then click Connect)');
+      setDiagnostics(['Status: local mode','Fill Admin tab fields and click Connect Cloud.']);
+    }
+  }catch(err){
+    console.error('War Room boot failed:',err);
+    const fallback=document.createElement('div');
+    fallback.style.cssText='padding:16px;color:#ff3c3c;font-family:monospace;';
+    fallback.textContent='War Room failed to start. Open DevTools Console and share the first red error line.';
+    document.body.prepend(fallback);
+  }
+}
+
+boot();
 </script>
+<div id="toast" class="toast"></div>
 </body>
 </html>
