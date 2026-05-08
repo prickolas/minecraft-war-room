@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚔ Minecraft War Room — Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#39ff14;--green-dim:#1a8c00;--green-dark:#0d4a00;--green-muted:#2a6600;
+  --amber:#ffb300;--red:#ff3c3c;--blue:#00bfff;--purple:#bf80ff;
+  --bg:#0a0f0a;--bg2:#0f160f;--bg3:#141e14;--border:#1f3d1f;--border2:#2a5a2a;
+}
+html,body{min-height:100vh;background:var(--bg);font-family:'Exo 2',sans-serif;color:#c8e6c8;font-size:15px;line-height:1.5}
+body{padding:20px}
+.war-room{max-width:1200px;margin:0 auto;background:var(--bg);border:1px solid var(--border2);border-radius:8px;overflow:hidden;position:relative}
+.war-room::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.06) 2px,rgba(0,0,0,0.06) 4px);pointer-events:none;z-index:0}
+.war-room>*{position:relative;z-index:1}
+.header{background:var(--bg2);border-bottom:1px solid var(--border2);padding:20px 28px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.header-logo{font-family:'Share Tech Mono',monospace;color:var(--green);font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-bottom:3px}
+.header-title{font-family:'Exo 2',sans-serif;font-size:28px;font-weight:700;color:var(--green);letter-spacing:1px;text-transform:uppercase}
+.header-status{display:flex;gap:12px;align-items:center;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--green-dim);margin-left:auto;flex-wrap:wrap}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 1.5s infinite;display:inline-block;flex-shrink:0}
+.dot.amber{background:var(--amber);animation-delay:.5s}
+.dot.red{background:var(--red);animation-duration:1s}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:13px 22px;font-family:'Share Tech Mono',monospace;font-size:12px;cursor:pointer;color:var(--green-dim);border-right:1px solid var(--border);text-transform:uppercase;letter-spacing:1px;transition:all .2s;white-space:nowrap;position:relative;flex-shrink:0}
+.tab.active{color:var(--green);background:var(--bg3)}
+.tab.active::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--green)}
+.tab:hover:not(.active){color:#6db86d;background:rgba(57,255,20,0.04)}
+.content{padding:22px}
+.panel{display:none}.panel.active{display:block}
+.section-header{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--green-dim);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px}
+.section-header i{font-size:14px;color:var(--green)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:14px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:14px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:16px}
+.card-accent-green{border-left:3px solid var(--green)}
+.card-accent-amber{border-left:3px solid var(--amber)}
+.card-accent-red{border-left:3px solid var(--red)}
+.card-accent-blue{border-left:3px solid var(--blue)}
+.card-accent-purple{border-left:3px solid var(--purple)}
+.kpi-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--green-dim);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px}
+.kpi-value{font-size:28px;font-weight:700;color:var(--green);font-family:'Exo 2',sans-serif;line-height:1}
+.kpi-sub{font-size:12px;color:#5a8a5a;margin-top:4px}
+.role-card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:16px;margin-bottom:10px;display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:start}
+.role-icon{width:48px;height:48px;border-radius:4px;background:rgba(57,255,20,0.07);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.role-name{font-weight:700;font-size:16px;color:var(--green);margin-bottom:3px}
+.role-player{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--amber);margin-bottom:6px}
+.role-task{font-size:13px;color:#8ab88a;line-height:1.6}
+.status-badge{font-family:'Share Tech Mono',monospace;font-size:10px;padding:3px 10px;border-radius:2px;text-transform:uppercase;letter-spacing:1px;height:fit-content;white-space:nowrap}
+.badge-active{background:rgba(57,255,20,0.1);color:var(--green);border:1px solid var(--green-muted)}
+.badge-idle{background:rgba(255,179,0,0.1);color:var(--amber);border:1px solid rgba(255,179,0,0.3)}
+.badge-offline{background:rgba(255,60,60,0.1);color:var(--red);border:1px solid rgba(255,60,60,0.3)}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:500px}
+th{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--green-dim);text-transform:uppercase;letter-spacing:1px;text-align:left;padding:9px 12px;border-bottom:1px solid var(--border);background:var(--bg)}
+td{padding:9px 12px;border-bottom:1px solid var(--border);color:#a0c8a0}
+tr:hover td{background:rgba(57,255,20,0.03)}
+.coord{font-family:'Share Tech Mono',monospace;color:var(--blue);font-size:12px}
+.tier-bar{height:7px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:6px}
+.tier-fill{height:100%;background:linear-gradient(90deg,var(--green-dark),var(--green));border-radius:3px}
+.req-item{background:rgba(57,255,20,0.04);border:1px solid var(--border);border-radius:4px;padding:11px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.req-need{font-weight:600;color:#c8e6c8;font-size:14px;flex:1;min-width:120px}
+.req-offer{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--amber)}
+.req-who{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--green-dim);white-space:nowrap}
+.remove-btn{background:none;border:none;color:var(--red);font-size:20px;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0}
+.obj-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}
+.obj-row:last-child{border-bottom:none}
+.obj-check{width:22px;height:22px;border:1px solid var(--green-muted);border-radius:2px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .2s;background:transparent}
+.obj-check.done{background:var(--green-dark);border-color:var(--green)}
+.obj-check i{font-size:12px;color:var(--green);display:none}
+.obj-check.done i{display:block}
+.obj-text{flex:1;font-size:14px;color:#a0c8a0;transition:all .2s}
+.obj-text.done{text-decoration:line-through;color:#3a5a3a}
+.obj-priority{font-family:'Share Tech Mono',monospace;font-size:10px;padding:3px 8px;border-radius:2px;flex-shrink:0}
+.pri-crit{background:rgba(255,60,60,0.15);color:var(--red);border:1px solid rgba(255,60,60,0.3)}
+.pri-high{background:rgba(255,179,0,0.1);color:var(--amber);border:1px solid rgba(255,179,0,0.3)}
+.pri-med{background:rgba(0,191,255,0.1);color:var(--blue);border:1px solid rgba(0,191,255,0.3)}
+.modpack-card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:18px;margin-bottom:12px}
+.modpack-card.recommended{border-color:var(--green-muted);box-shadow:0 0 12px rgba(57,255,20,0.06)}
+.modpack-name{font-weight:700;font-size:17px;color:var(--green);margin-bottom:3px}
+.modpack-tag{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--amber);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.rec-badge{font-family:'Share Tech Mono',monospace;font-size:10px;padding:3px 10px;background:rgba(57,255,20,0.15);color:var(--green);border:1px solid var(--green-muted);border-radius:2px;display:inline-block;margin-bottom:8px}
+.rating-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.rating-name{font-size:11px;color:#5a8a5a;width:120px;font-family:'Share Tech Mono',monospace;flex-shrink:0}
+.rating-bar{flex:1;height:5px;background:var(--border);border-radius:2px;overflow:hidden}
+.rating-fill{height:100%;border-radius:2px}
+.fill-green{background:var(--green)}
+.fill-amber{background:var(--amber)}
+.fill-blue{background:var(--blue)}
+.rating-num{font-family:'Share Tech Mono',monospace;font-size:11px;color:#5a8a5a;width:32px;text-align:right}
+.vote-section{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:16px;margin-top:14px}
+.vote-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.vote-label{font-family:'Share Tech Mono',monospace;font-size:11px;color:#a0c8a0;width:150px;flex-shrink:0}
+.vote-bar-wrap{flex:1;height:7px;background:var(--border);border-radius:3px;overflow:hidden}
+.vote-bar-fill{height:100%;background:var(--green);border-radius:3px;transition:width .4s}
+.vote-count{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--green-dim);width:60px;text-align:right}
+input[type=text]{background:var(--bg);border:1px solid var(--border2);color:#c8e6c8;padding:8px 12px;border-radius:3px;font-family:'Share Tech Mono',monospace;font-size:12px;outline:none;width:100%;transition:border-color .2s}
+input[type=text]:focus{border-color:var(--green);box-shadow:0 0 0 1px rgba(57,255,20,0.1)}
+input[type=text]::placeholder{color:#2a5a2a}
+select{background:var(--bg);border:1px solid var(--border2);color:#c8e6c8;padding:8px 12px;border-radius:3px;font-family:'Share Tech Mono',monospace;font-size:12px;outline:none;flex:1;transition:border-color .2s}
+select:focus{border-color:var(--green)}
+.btn{background:transparent;border:1px solid var(--green-muted);color:var(--green);padding:8px 18px;border-radius:3px;font-family:'Share Tech Mono',monospace;font-size:11px;cursor:pointer;text-transform:uppercase;letter-spacing:1px;transition:all .2s;white-space:nowrap}
+.btn:hover{background:rgba(57,255,20,0.1);border-color:var(--green)}
+.btn:active{transform:scale(.98)}
+.btn-sm{padding:5px 12px;font-size:10px}
+.btn-danger{border-color:rgba(255,60,60,0.4);color:var(--red)}
+.btn-danger:hover{background:rgba(255,60,60,0.1);border-color:var(--red)}
+.form-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--green-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
+.add-form{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:14px;margin-top:12px;display:grid;grid-template-columns:1fr 1fr auto auto;gap:10px;align-items:end}
+.add-coord-form{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:14px;margin-top:12px;display:grid;grid-template-columns:1fr auto auto auto auto;gap:10px;align-items:end}
+.modpack-desc{font-size:13px;color:#5a8a5a;margin-bottom:12px;line-height:1.7}
+.vote-controls{display:flex;gap:10px;margin-top:10px;align-items:center}
+.divider{color:var(--border2);margin:0 2px}
+@media(max-width:600px){
+  .add-form{grid-template-columns:1fr 1fr;}.add-form>:last-child{grid-column:1/-1}
+  .add-coord-form{grid-template-columns:1fr 1fr}.add-coord-form>:last-child{grid-column:1/-1}
+  .role-card{grid-template-columns:auto 1fr;}.role-card>:last-child{grid-column:2}
+}
+</style>
+</head>
+<body>
+<div class="war-room">
+  <div class="header">
+    <div>
+      <div class="header-logo">// MINECRAFT WAR ROOM v1.0</div>
+      <div class="header-title">⚔ COMMAND CENTER</div>
+    </div>
+    <div class="header-status">
+      <span><span class="dot"></span> SERVER ONLINE</span>
+      <span class="divider">|</span>
+      <span><span class="dot amber"></span> MODPACK TBD</span>
+      <span class="divider">|</span>
+      <span><span class="dot red"></span> AGE 0</span>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('objectives')">🎯 Objectives</div>
+    <div class="tab" onclick="switchTab('roles')">👥 Roles</div>
+    <div class="tab" onclick="switchTab('logistics')">🗺 Logistics</div>
+    <div class="tab" onclick="switchTab('requests')">📦 Requests</div>
+    <div class="tab" onclick="switchTab('modpack')">🎮 Modpack Vote</div>
+  </div>
+
+  <div class="content">
+
+    <!-- OBJECTIVES -->
+    <div id="panel-objectives" class="panel active">
+      <div class="grid3">
+        <div class="card card-accent-red">
+          <div class="kpi-label">Current Age / Tier</div>
+          <div class="kpi-value" style="color:var(--red)">0</div>
+          <div class="kpi-sub">Stone Age — New World</div>
+        </div>
+        <div class="card card-accent-amber">
+          <div class="kpi-label">Team Goal</div>
+          <div class="kpi-value" style="font-size:16px;padding-top:4px;color:var(--amber)">Establish Base</div>
+          <div class="kpi-sub">Build permanent HQ</div>
+        </div>
+        <div class="card card-accent-red">
+          <div class="kpi-label">Bottleneck</div>
+          <div class="kpi-value" style="font-size:16px;padding-top:4px;color:var(--red)">Iron + Food</div>
+          <div class="kpi-sub">Critical shortage</div>
+        </div>
+      </div>
+      <div class="section-header"><i class="ti ti-list-check"></i> Primary Objectives</div>
+      <div class="card" style="margin-bottom:12px"><div id="obj-list"></div></div>
+      <div class="section-header"><i class="ti ti-progress"></i> Tier Progression</div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+          <span style="font-size:11px;color:#5a8a5a">Age 0 — Stone</span>
+          <span style="font-size:11px;color:#5a8a5a">Age 1 — Iron Age</span>
+        </div>
+        <div class="tier-bar"><div class="tier-fill" id="tier-fill" style="width:18%"></div></div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--green-dim);margin-top:5px">18% — IRON SMELTER REQUIRED TO ADVANCE</div>
+      </div>
+    </div>
+
+    <!-- ROLES -->
+    <div id="panel-roles" class="panel">
+      <div class="section-header"><i class="ti ti-users"></i> Squad Role Assignments</div>
+      <div id="roles-list"></div>
+    </div>
+
+    <!-- LOGISTICS -->
+    <div id="panel-logistics" class="panel">
+      <div class="section-header"><i class="ti ti-map-pin"></i> Key Locations</div>
+      <div class="card tbl-wrap" style="margin-bottom:12px;padding:0">
+        <table>
+          <thead><tr><th>Location</th><th>Type</th><th>Coords (X / Y / Z)</th><th>Notes</th></tr></thead>
+          <tbody id="coords-table">
+            <tr><td>Main Base</td><td><span class="status-badge badge-active">BASE</span></td><td class="coord">??? / 64 / ???</td><td style="color:#5a8a5a">Not set yet</td></tr>
+            <tr><td>Spawn Point</td><td><span class="status-badge badge-idle">SPAWN</span></td><td class="coord">0 / 64 / 0</td><td style="color:#5a8a5a">Default world spawn</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="section-header"><i class="ti ti-plus"></i> Log New Location</div>
+      <div class="add-coord-form">
+        <div><div class="form-label">Location Name</div><input type="text" id="loc-name" placeholder="Iron Mine, Stronghold..."></div>
+        <div><div class="form-label">X</div><input type="text" id="loc-x" placeholder="0" style="width:70px"></div>
+        <div><div class="form-label">Y</div><input type="text" id="loc-y" placeholder="64" style="width:70px"></div>
+        <div><div class="form-label">Z</div><input type="text" id="loc-z" placeholder="0" style="width:70px"></div>
+        <div style="align-self:end"><button class="btn" onclick="addCoord()">+ LOG</button></div>
+      </div>
+    </div>
+
+    <!-- REQUESTS -->
+    <div id="panel-requests" class="panel">
+      <div class="section-header"><i class="ti ti-arrow-left-right"></i> Request &amp; React Board</div>
+      <div id="requests-list"></div>
+      <div class="section-header" style="margin-top:12px"><i class="ti ti-plus"></i> Post a Request</div>
+      <div class="add-form">
+        <div><div class="form-label">I Need</div><input type="text" id="req-need" placeholder="64x Iron Ingots..."></div>
+        <div><div class="form-label">I Offer</div><input type="text" id="req-offer" placeholder="Food, Wood..."></div>
+        <div><div class="form-label">Your Name</div><input type="text" id="req-who" placeholder="Role/Name" style="width:100px"></div>
+        <div style="align-self:end"><button class="btn" onclick="addRequest()">+ POST</button></div>
+      </div>
+    </div>
+
+    <!-- MODPACK VOTE -->
+    <div id="panel-modpack" class="panel">
+      <div class="section-header"><i class="ti ti-trophy"></i> Modpack Evaluation Matrix</div>
+      <div id="modpacks-list"></div>
+
+      <!-- Add new modpack form -->
+      <div class="section-header" style="margin-top:16px"><i class="ti ti-plus"></i> Add a Modpack</div>
+      <div class="card" style="margin-bottom:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div><div class="form-label">Modpack Name</div><input type="text" id="mp-name" placeholder="e.g. All the Mods 9"></div>
+          <div><div class="form-label">Tag / Focus</div><input type="text" id="mp-tag" placeholder="e.g. Kitchen Sink"></div>
+        </div>
+        <div style="margin-bottom:10px"><div class="form-label">Description</div><input type="text" id="mp-desc" placeholder="What makes this pack good for the squad..."></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+          <div>
+            <div class="form-label">Complexity (0–100)</div>
+            <input type="text" id="mp-complexity" placeholder="50">
+          </div>
+          <div>
+            <div class="form-label">RPG Depth (0–100)</div>
+            <input type="text" id="mp-rpg" placeholder="50">
+          </div>
+          <div>
+            <div class="form-label">Co-op Potential (0–100)</div>
+            <input type="text" id="mp-coop" placeholder="50">
+          </div>
+        </div>
+        <button class="btn" onclick="addModpack()">+ ADD MODPACK</button>
+      </div>
+
+      <div class="vote-section">
+        <div class="section-header" style="margin-bottom:12px"><i class="ti ti-chart-bar"></i> Squad Vote</div>
+        <div id="vote-results"></div>
+        <div class="vote-controls">
+          <select id="vote-select"><option value="">-- Cast your vote --</option></select>
+          <button class="btn" onclick="castVote()">VOTE ↗</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const objectives=[
+  {text:"Find a safe base location (flat terrain, near trees + water)",priority:"crit",done:false},
+  {text:"Build starter shelter before first night",priority:"crit",done:false},
+  {text:"Set up communal chest storage system",priority:"high",done:false},
+  {text:"Locate iron ore vein — minimum 64 blocks",priority:"high",done:false},
+  {text:"Establish farm (wheat + carrots minimum)",priority:"high",done:false},
+  {text:"Scout nearby biomes and log coordinates",priority:"med",done:false},
+  {text:"Build Nether portal (post iron age)",priority:"med",done:false},
+];
+
+const roles=[
+  {icon:"🏗",name:"The Foreman",player:"[Unassigned]",task:"Base layout, building aesthetic, room planning. Stops the squad living in a cobblestone shoebox. Tasks: Design HQ blueprint, assign rooms, maintain build standards.",status:"idle"},
+  {icon:"⚒",name:"The Quartermaster",player:"[Unassigned]",task:"Storage system and logistics (Iron Chests → AE2 → RS). Knows where everything is. Tasks: Build storage, label chests, maintain item routing.",status:"idle"},
+  {icon:"🧭",name:"The Pathfinder",player:"[Unassigned]",task:"Exploration, biome scouting, waypoints. The squad's GPS. Tasks: Log all coordinates, find rare biomes, locate dungeons + strongholds.",status:"idle"},
+  {icon:"⚔",name:"The Vanguard",player:"[Unassigned]",task:"Combat, boss fights, gear + enchanting. Keeps the team alive. Tasks: Max out armour ASAP, lead boss encounters, supply enchanted gear.",status:"idle"},
+  {icon:"🔮",name:"The Arcanist",player:"[Unassigned]",task:"Magic/tech research and progression. Unlocks advanced mod content. Tasks: Research mod trees, craft key progression items, manage power/mana.",status:"idle"},
+  {icon:"🌾",name:"The Steward",player:"[Unassigned]",task:"Food, farming, and passive mob management. No one starves on their watch. Tasks: Build farms, manage animals, keep communal food supply stocked.",status:"idle"},
+];
+
+let modpacks=[
+  {id:"vh",name:"Vault Hunters 3rd Edition",tag:"Pure RPG Progression",rec:true,complexity:80,rpg:95,coop:85,desc:"Built around a dungeon loop — run Vaults together, collect loot, and level a massive skill tree. Every session has clear goals. Best for groups who love grinding with purpose."},
+  {id:"bmc",name:"Better MC (BMC4)",tag:"Exploration & Adventure",rec:false,complexity:45,rpg:70,coop:75,desc:"Classic Minecraft feel with 100× more bosses, biomes, and RPG quests. Lower tech ceiling means less friction. Best for groups who want adventure without heavy automation."},
+  {id:"e9",name:"Enigmatica 9",tag:"Cooperative Building",rec:false,complexity:90,rpg:60,coop:90,desc:"Build a massive high-tech/magic base together. Role specialisation is baked in — one person does Tech, one does Magic. Best for groups who love deep systems."},
+];
+
+let requests=[
+  {need:"64x Logs (any type)",offer:"Cooked food x32",who:"Pathfinder"},
+  {need:"Iron Pickaxe",offer:"Scouting report",who:"Foreman"},
+];
+
+let votes={};
+modpacks.forEach(m=>votes[m.id]=0);
+
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el=>{if(el.getAttribute('onclick').includes("'"+t+"'"))el.classList.add('active')});
+  document.getElementById('panel-'+t).classList.add('active');
+}
+
+function renderObjectives(){
+  document.getElementById('obj-list').innerHTML=objectives.map((o,i)=>`
+    <div class="obj-row">
+      <div class="obj-check ${o.done?'done':''}" onclick="toggleObj(${i})"><i class="ti ti-check"></i></div>
+      <div class="obj-text ${o.done?'done':''}">${o.text}</div>
+      <span class="obj-priority pri-${o.priority}">${o.priority.toUpperCase()}</span>
+    </div>`).join('');
+}
+
+function toggleObj(i){objectives[i].done=!objectives[i].done;renderObjectives();}
+
+function renderRoles(){
+  document.getElementById('roles-list').innerHTML=roles.map((r,i)=>`
+    <div class="role-card">
+      <div class="role-icon">${r.icon}</div>
+      <div>
+        <div class="role-name">${r.name}</div>
+        <div class="role-player">> ${r.player}</div>
+        <div class="role-task">${r.task}</div>
+      </div>
+      <span class="status-badge badge-${r.status}">${r.status}</span>
+    </div>`).join('');
+}
+
+function renderRequests(){
+  const el=document.getElementById('requests-list');
+  if(!requests.length){el.innerHTML='<div style="font-family:\'Share Tech Mono\',monospace;font-size:13px;color:#3a5a3a;padding:16px 0;text-align:center">// NO ACTIVE REQUESTS — POST ONE BELOW</div>';return;}
+  el.innerHTML=requests.map((r,i)=>`
+    <div class="req-item">
+      <span style="font-size:18px">📥</span>
+      <div class="req-need">${r.need}</div>
+      <span style="font-size:10px;color:#5a8a5a;font-family:'Share Tech Mono',monospace">OFFER:</span>
+      <div class="req-offer">${r.offer}</div>
+      <div class="req-who">${r.who}</div>
+      <button class="remove-btn" onclick="removeReq(${i})" title="Mark fulfilled">×</button>
+    </div>`).join('');
+}
+
+function addRequest(){
+  const need=document.getElementById('req-need').value.trim();
+  const offer=document.getElementById('req-offer').value.trim();
+  const who=document.getElementById('req-who').value.trim();
+  if(!need)return;
+  requests.push({need,offer:offer||'Nothing yet',who:who||'???'});
+  renderRequests();
+  ['req-need','req-offer','req-who'].forEach(id=>document.getElementById(id).value='');
+}
+
+function removeReq(i){requests.splice(i,1);renderRequests();}
+
+function addCoord(){
+  const name=document.getElementById('loc-name').value.trim();
+  const x=document.getElementById('loc-x').value.trim()||'?';
+  const y=document.getElementById('loc-y').value.trim()||'?';
+  const z=document.getElementById('loc-z').value.trim()||'?';
+  if(!name)return;
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td>${name}</td><td><span class="status-badge badge-idle">WAYPOINT</span></td><td class="coord">${x} / ${y} / ${z}</td><td style="color:#5a8a5a">Logged</td>`;
+  document.getElementById('coords-table').appendChild(tr);
+  ['loc-name','loc-x','loc-y','loc-z'].forEach(id=>document.getElementById(id).value='');
+}
+
+function clamp(v){return Math.min(100,Math.max(0,parseInt(v)||50));}
+
+function addModpack(){
+  const name=document.getElementById('mp-name').value.trim();
+  if(!name)return;
+  const id='mp_'+Date.now();
+  modpacks.push({
+    id,
+    name,
+    tag:document.getElementById('mp-tag').value.trim()||'Custom Pack',
+    rec:false,
+    complexity:clamp(document.getElementById('mp-complexity').value),
+    rpg:clamp(document.getElementById('mp-rpg').value),
+    coop:clamp(document.getElementById('mp-coop').value),
+    desc:document.getElementById('mp-desc').value.trim()||'No description added yet.',
+  });
+  votes[id]=0;
+  ['mp-name','mp-tag','mp-desc','mp-complexity','mp-rpg','mp-coop'].forEach(id=>document.getElementById(id).value='');
+  renderModpacks();
+  renderVoteSelect();
+  renderVotes();
+}
+
+function removeModpack(id){
+  modpacks=modpacks.filter(m=>m.id!==id);
+  delete votes[id];
+  renderModpacks();
+  renderVoteSelect();
+  renderVotes();
+}
+
+function setRecommended(id){
+  modpacks.forEach(m=>m.rec=(m.id===id));
+  renderModpacks();
+}
+
+function renderModpacks(){
+  document.getElementById('modpacks-list').innerHTML=modpacks.map(m=>`
+    <div class="modpack-card ${m.rec?'recommended':''}">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px">
+        <div>
+          ${m.rec?'<span class="rec-badge">★ SQUAD RECOMMENDATION</span><br>':''}
+          <div class="modpack-name">${m.name}</div>
+          <div class="modpack-tag">${m.tag}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;margin-top:4px">
+          ${!m.rec?`<button class="btn btn-sm" onclick="setRecommended('${m.id}')" title="Set as recommended">★ PICK</button>`:''}
+          <button class="btn btn-sm btn-danger" onclick="removeModpack('${m.id}')" title="Remove modpack">✕ REMOVE</button>
+        </div>
+      </div>
+      <div class="modpack-desc">${m.desc}</div>
+      <div class="rating-row"><span class="rating-name">Complexity</span><div class="rating-bar"><div class="rating-fill fill-amber" style="width:${m.complexity}%"></div></div><span class="rating-num">${m.complexity}%</span></div>
+      <div class="rating-row"><span class="rating-name">RPG Depth</span><div class="rating-bar"><div class="rating-fill fill-green" style="width:${m.rpg}%"></div></div><span class="rating-num">${m.rpg}%</span></div>
+      <div class="rating-row"><span class="rating-name">Co-op Potential</span><div class="rating-bar"><div class="rating-fill fill-blue" style="width:${m.coop}%"></div></div><span class="rating-num">${m.coop}%</span></div>
+    </div>`).join('');
+}
+
+function renderVoteSelect(){
+  const sel=document.getElementById('vote-select');
+  sel.innerHTML='<option value="">-- Cast your vote --</option>'+
+    modpacks.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+}
+
+function renderVotes(){
+  const totalVotes=Object.values(votes).reduce((a,b)=>a+b,0)||1;
+  document.getElementById('vote-results').innerHTML=modpacks.map(m=>`
+    <div class="vote-row">
+      <span class="vote-label">${m.name.length>20?m.name.substring(0,18)+'…':m.name}</span>
+      <div class="vote-bar-wrap"><div class="vote-bar-fill" style="width:${Math.round((votes[m.id]||0)/totalVotes*100)}%"></div></div>
+      <span class="vote-count">${votes[m.id]||0} vote${votes[m.id]!==1?'s':''}</span>
+    </div>`).join('');
+}
+
+function castVote(){
+  const v=document.getElementById('vote-select').value;
+  if(!v)return;
+  votes[v]=(votes[v]||0)+1;
+  renderVotes();
+  document.getElementById('vote-select').value='';
+}
+
+renderObjectives();
+renderRoles();
+renderRequests();
+renderModpacks();
+renderVoteSelect();
+renderVotes();
+</script>
+</body>
+</html>
