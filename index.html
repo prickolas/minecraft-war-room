@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0f0a" id="meta-theme-color">
 <title>⚔ War Room — Tactical Command Center</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,8 +16,9 @@
   --amber:#ffb300;--red:#ff3c3c;--blue:#00bfff;--purple:#bf80ff;
   --bg:#0a0f0a;--bg2:#0f160f;--bg3:#141e14;--border:#1f3d1f;--border2:#2a5a2a;
 }
+html{color-scheme:dark}
 html,body{min-height:100vh;background:radial-gradient(ellipse 120% 80% at 50% -20%,rgba(57,255,20,0.06),transparent 50%),var(--bg);font-family:'Exo 2',sans-serif;color:#c8e6c8;font-size:15px;line-height:1.5}
-body{padding:20px}
+body{padding:max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left))}
 .war-room{max-width:1200px;margin:0 auto;background:var(--bg);border:1px solid var(--border2);border-radius:10px;overflow:hidden;position:relative;box-shadow:0 0 0 1px rgba(57,255,20,0.08),0 24px 48px rgba(0,0,0,0.45),0 0 80px rgba(57,255,20,0.04)}
 .war-room::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.06) 2px,rgba(0,0,0,0.06) 4px);pointer-events:none;z-index:0}
 .war-room>*{position:relative;z-index:1}
@@ -33,9 +35,9 @@ body{padding:20px}
 .dot.amber{background:var(--amber);animation-delay:.5s}
 .dot.red{background:var(--red);animation-duration:1s}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
-.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;touch-action:pan-x}
 .tabs::-webkit-scrollbar{display:none}
-.tab{padding:13px 22px;font-family:'Share Tech Mono',monospace;font-size:12px;cursor:pointer;color:var(--green-dim);border-right:1px solid var(--border);text-transform:uppercase;letter-spacing:1px;transition:all .2s;white-space:nowrap;position:relative;flex-shrink:0}
+.tab{padding:13px 22px;font-family:'Share Tech Mono',monospace;font-size:12px;cursor:pointer;color:var(--green-dim);border-right:1px solid var(--border);text-transform:uppercase;letter-spacing:1px;transition:all .2s;white-space:nowrap;position:relative;flex-shrink:0;scroll-snap-align:start}
 .tab.active{color:var(--green);background:var(--bg3)}
 .tab.active::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--green)}
 .tab:hover:not(.active){color:#6db86d;background:rgba(57,255,20,0.04)}
@@ -63,7 +65,7 @@ body{padding:20px}
 .badge-active{background:rgba(57,255,20,0.1);color:var(--green);border:1px solid var(--green-muted)}
 .badge-idle{background:rgba(255,179,0,0.1);color:var(--amber);border:1px solid rgba(255,179,0,0.3)}
 .badge-offline{background:rgba(255,60,60,0.1);color:var(--red);border:1px solid rgba(255,60,60,0.3)}
-.tbl-wrap{overflow-x:auto}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
 table{width:100%;border-collapse:collapse;font-size:13px;min-width:500px}
 th{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--green-dim);text-transform:uppercase;letter-spacing:1px;text-align:left;padding:9px 12px;border-bottom:1px solid var(--border);background:var(--bg)}
 td{padding:9px 12px;border-bottom:1px solid var(--border);color:#a0c8a0}
@@ -147,8 +149,12 @@ select:focus{border-color:var(--green)}
 .obj-owner{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--amber)}
 .obj-updated{font-family:'Share Tech Mono',monospace;font-size:10px;color:#4f7b4f}
 .shortcut-hint{font-family:'Share Tech Mono',monospace;font-size:10px;color:#4f7b4f}
-.obj-actions{display:flex;gap:6px;align-items:center}
+.obj-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.obj-main{flex:1;min-width:0}
 .obj-edit-row{display:grid;grid-template-columns:1fr 120px 100px 100px auto auto;gap:8px;align-items:center;width:100%}
+.mp-form-grid{display:grid;gap:10px;margin-bottom:10px}
+.mp-form-grid-2{grid-template-columns:1fr 1fr}
+.mp-form-grid-3{grid-template-columns:1fr 1fr 1fr;margin-bottom:12px}
 .obj-edit-row input[type=text],.obj-edit-row select{font-size:11px;padding:6px 8px}
 .user-card select{width:100%}
 .perm-note{font-family:'Share Tech Mono',monospace;font-size:10px;color:#5a8a5a;margin-top:6px}
@@ -159,7 +165,7 @@ select:focus{border-color:var(--green)}
 .admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .admin-card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:16px}
 .diag-box{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:10px;min-height:80px;font-family:'Share Tech Mono',monospace;font-size:11px;color:#a0c8a0;white-space:pre-wrap}
-.toast{position:fixed;bottom:20px;right:20px;background:var(--bg2);border:1px solid var(--green-muted);padding:10px 12px;border-radius:4px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--green);opacity:0;transform:translateY(8px);transition:all .2s;pointer-events:none;z-index:10}
+.toast{position:fixed;bottom:max(20px, env(safe-area-inset-bottom));right:max(16px, env(safe-area-inset-right));left:auto;max-width:calc(100vw - 32px - env(safe-area-inset-left) - env(safe-area-inset-right));background:var(--bg2);border:1px solid var(--green-muted);padding:12px 14px;border-radius:4px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--green);opacity:0;transform:translateY(8px);transition:all .2s;pointer-events:none;z-index:10}
 .toast.show{opacity:1;transform:translateY(0)}
 .war-room.command-mode .kpi-value{font-size:32px}
 .war-room.command-mode .tab{font-size:13px;padding:14px 24px}
@@ -188,6 +194,80 @@ textarea.sitrep-text{min-height:120px}
 .up-next-title{font-size:14px;color:#c8e6c8;font-weight:600;line-height:1.35}
 .up-next-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
 .wp-copy{font-family:'Share Tech Mono',monospace;font-size:10px;padding:2px 8px}
+.ping-board-lead{font-size:12px;color:#5a8a5a;margin-bottom:12px;line-height:1.55}
+.ping-compose{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.ping-compose-row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.ping-compose-row select{max-width:100%;min-width:140px}
+.ping-compose .btn{align-self:flex-start}
+.ping-stream{display:flex;flex-direction:column;gap:12px}
+.ping-note{
+  background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:12px 14px;
+  border-left:4px solid var(--green)
+}
+.ping-note.ping-fresh{animation:ping-pop .5s ease-out;box-shadow:0 0 28px rgba(57,255,20,0.1)}
+.ping-accent-0{border-left-color:var(--green)}
+.ping-accent-1{border-left-color:var(--amber)}
+.ping-accent-2{border-left-color:var(--blue)}
+.ping-accent-3{border-left-color:var(--purple)}
+.ping-note-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.ping-avatar{
+  width:36px;height:36px;border-radius:50%;background:rgba(57,255,20,0.1);border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--green);font-family:'Share Tech Mono',monospace;font-size:14px;flex-shrink:0
+}
+.ping-note-meta{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:baseline}
+.ping-author{font-weight:600;color:#c8e6c8}
+.ping-kind{font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:1px;padding:2px 8px;border-radius:2px;border:1px solid var(--border2);color:var(--amber);text-transform:uppercase}
+.ping-kind.kind-intel{color:var(--blue);border-color:rgba(0,191,255,0.35)}
+.ping-kind.kind-need{color:var(--red);border-color:rgba(255,60,60,0.35)}
+.ping-kind.kind-eta{color:var(--amber);border-color:rgba(255,179,0,0.35)}
+.ping-kind.kind-lol{color:var(--purple);border-color:rgba(191,128,255,0.35)}
+.ping-kind.kind-misc{color:#7db27d}
+.ping-time{font-size:10px;color:#4f7b4f;font-family:'Share Tech Mono',monospace}
+.ping-body{font-size:14px;color:#a0c8a0;line-height:1.55;word-break:break-word;white-space:pre-wrap}
+.ping-remove{margin-left:auto;flex-shrink:0}
+@keyframes ping-pop{
+  from{opacity:0;transform:translateY(8px) scale(0.97)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+.header-live-line{font-size:13px;color:#8ab88a;margin-top:8px;line-height:1.45;max-width:780px}
+.header-live-line .live-world{color:var(--amber);font-weight:600}
+.header-live-line .live-goal{color:#c8e6c8}
+.theme-high-contrast{
+  --green:#5fff5f;--green-dim:#2dcc2d;--green-muted:#228b22;--amber:#ffcc33;--blue:#66d9ff;
+  --bg:#020402;--bg2:#071207;--bg3:#0c180c;--border:#2d6a2d;--border2:#3d8a3d
+}
+.theme-high-contrast .shortcut-hint,.theme-high-contrast .kpi-sub,.theme-high-contrast .sitrep-lead,.theme-high-contrast .session-meta-hint,.theme-high-contrast .ping-board-lead{color:#b8e0b8 !important}
+.theme-high-contrast .header-live-line{color:#d8f0d8}
+.theme-high-contrast td,.theme-high-contrast .obj-text{color:#cde8cd !important}
+.theme-reader{font-size:17px}
+.theme-reader .content,.theme-reader .card,.theme-reader .cmd-value{font-size:17px;line-height:1.65}
+.theme-reader .header-title{font-size:26px}
+.modal-backdrop{
+  position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:200;opacity:0;visibility:hidden;
+  transition:opacity .2s,visibility .2s;display:flex;align-items:flex-start;justify-content:center;padding:max(16px, env(safe-area-inset-top)) 16px 16px;overflow-y:auto
+}
+.modal-backdrop.is-open{opacity:1;visibility:visible}
+.modal-sheet{
+  width:100%;max-width:440px;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;
+  padding:18px 20px 22px;margin:6vh auto;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.5)
+}
+.modal-sheet h3{font-size:14px;color:var(--green);font-family:'Share Tech Mono',monospace;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px}
+.modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px}
+.modal-close{background:transparent;border:none;color:var(--green-dim);font-size:22px;cursor:pointer;line-height:1;padding:4px}
+.modal-close:hover{color:var(--green)}
+.cheatsheet-k{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--amber);white-space:nowrap}
+.cheatsheet-row{display:flex;gap:12px;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px}
+.cheatsheet-row:last-child{border-bottom:none}
+.ping-filters{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;align-items:flex-end}
+.ping-filters .form-label{margin-bottom:0}
+.ping-reply-banner{font-size:12px;color:var(--amber);margin-bottom:10px;padding:8px 10px;background:rgba(255,179,0,0.08);border-radius:4px;border-left:3px solid var(--amber);display:none}
+.ping-reply-banner strong{color:#ffe082}
+.ping-reply-context{font-size:11px;color:#7db27d;margin-bottom:8px;padding:6px 8px;background:rgba(57,255,20,0.04);border-radius:4px;border-left:2px solid var(--green-dim)}
+.ping-body a{color:var(--blue);text-decoration:underline;word-break:break-all}
+.ping-body a:hover{color:#99e8ff}
+.ping-hint-warn{color:var(--amber);font-size:11px;margin-top:-4px}
+.obj-blocked-note{font-size:12px;color:var(--amber);margin-top:6px;padding:6px 10px;background:rgba(255,179,0,0.07);border-radius:4px;border-left:2px solid var(--amber);line-height:1.4}
+.obj-edit-blocked-hint{font-size:10px;color:#5a8a5a;grid-column:1/-1;margin-top:-4px}
 .hamburger-btn{
   display:flex;flex-direction:column;justify-content:center;gap:5px;
   width:42px;height:42px;padding:0;background:transparent;border:1px solid var(--border2);
@@ -208,10 +288,10 @@ textarea.sitrep-text{min-height:120px}
   display:flex;flex-direction:column;box-shadow:8px 0 40px rgba(0,0,0,0.45)
 }
 .side-drawer.is-open{transform:translateX(0)}
-.drawer-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--green);letter-spacing:1px}
+.drawer-head{display:flex;align-items:center;justify-content:space-between;padding:max(14px, env(safe-area-inset-top)) 16px 14px 16px;border-bottom:1px solid var(--border);font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--green);letter-spacing:1px}
 .drawer-head button{background:transparent;border:none;color:var(--green-dim);font-size:22px;line-height:1;cursor:pointer;padding:4px 8px;border-radius:4px}
 .drawer-head button:hover{color:var(--green);background:rgba(57,255,20,0.06)}
-.drawer-scroll{flex:1;overflow-y:auto;padding:12px 14px 24px}
+.drawer-scroll{flex:1;overflow-y:auto;padding:12px 14px max(24px, calc(16px + env(safe-area-inset-bottom)));-webkit-overflow-scrolling:touch}
 .drawer-group-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--green-dim);text-transform:uppercase;letter-spacing:2px;margin:14px 0 8px}
 .drawer-group-label:first-child{margin-top:4px}
 .drawer-nav-btn{
@@ -237,13 +317,68 @@ textarea.sitrep-text{min-height:120px}
 .collapse-title.section-header{margin-bottom:0;padding-bottom:0;border-bottom:none}
 .collapsible-card.is-collapsed .collapse-toggle{border-bottom:none;margin-bottom:0;padding-bottom:0}
 .collapsible-card.is-collapsed .collapse-panel{display:none}
+@media(max-width:768px){
+  body{padding:12px;padding:max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left))}
+  .war-room{border-radius:8px}
+  .header{padding:14px 16px;gap:10px}
+  .header-title{font-size:22px;line-height:1.15}
+  .header-logo{font-size:10px;letter-spacing:1.2px}
+  .header-status{margin-left:0;flex-basis:100%;padding-top:12px;margin-top:2px;border-top:1px solid var(--border2);gap:8px 12px;align-items:center}
+  .content{padding:14px 16px}
+  .command-strip{grid-template-columns:1fr;gap:10px}
+  .tab{min-height:48px;padding:14px 16px;font-size:11px}
+  .btn,.btn-sm{min-height:44px;padding:10px 16px;font-size:11px}
+  .btn-sm{min-height:40px;padding:8px 14px}
+  .hamburger-btn{width:48px;height:48px;min-width:48px}
+  .collapse-toggle{min-height:48px;align-items:center;padding-bottom:12px}
+  .drawer-nav-btn{min-height:48px;padding:12px 14px;font-size:15px}
+  .vote-controls{flex-direction:column;align-items:stretch;gap:12px}
+  .vote-controls select,.vote-controls .btn{width:100%}
+  .checkpoint-rail{padding-bottom:10px}
+  .obj-check{width:32px;height:32px;min-width:32px;min-height:32px}
+  .obj-check i{font-size:14px}
+  .obj-row{align-items:flex-start;gap:10px}
+  .obj-row > .obj-priority{margin-top:2px}
+  .obj-row > .obj-actions{flex:1 1 100%;justify-content:flex-end;gap:8px}
+  .obj-edit-row{grid-template-columns:1fr;gap:10px}
+  .obj-edit-row .btn{width:100%;justify-self:stretch}
+  .mp-form-grid-2,.mp-form-grid-3{grid-template-columns:1fr}
+  input[type=text],input[type=password],select,textarea{font-size:16px}
+  .obj-edit-row input[type=text],.obj-edit-row select{font-size:16px;padding:10px 12px}
+  .collapse-panel .grid3 .card{padding:14px}
+  th,td{padding:10px 8px;font-size:12px}
+  table{min-width:480px}
+  .rating-name{width:100px}
+  .vote-label{width:100px}
+  .kpi-value{font-size:24px}
+}
 @media(max-width:600px){
-  .add-form{grid-template-columns:1fr 1fr;}.add-form>:last-child{grid-column:1/-1}
-  .add-coord-form{grid-template-columns:1fr 1fr}.add-coord-form>:last-child{grid-column:1/-1}
-  .role-card{grid-template-columns:auto 1fr;}.role-card>:last-child{grid-column:2}
+  .add-form{grid-template-columns:1fr;gap:12px}
+  .add-form>:last-child{grid-column:1/-1;justify-self:stretch}
+  .add-form .btn{width:100%}
+  .add-form input[type=text],.add-form select{width:100%!important;max-width:100%}
+  .add-coord-form{grid-template-columns:1fr;gap:12px}
+  .add-coord-form>:last-child{grid-column:1/-1}
+  .add-coord-form .btn{width:100%}
+  .add-coord-form input[type=text],.add-coord-form select{width:100%!important;max-width:100%}
+  .checkpoint-rail{flex-direction:column;max-height:none;overflow-x:visible;scroll-snap-type:none;padding-right:0}
+  .checkpoint-node{width:100%;max-width:none;scroll-snap-align:unset}
+  .ping-compose-row{flex-direction:column;align-items:stretch}
+  .ping-compose-row select{width:100%;min-width:0}
+  .ping-remove{margin-left:0;width:100%}
+  .role-card{grid-template-columns:auto 1fr}
+  .role-card>:last-child{grid-column:2}
   .admin-grid{grid-template-columns:1fr}
   .brief-grid{grid-template-columns:1fr}
-  .add-checkpoint-row{grid-template-columns:1fr}
+  .add-checkpoint-row{grid-template-columns:1fr;gap:10px}
+  .add-checkpoint-row .btn{width:100%}
+  .session-meta-grid{grid-template-columns:1fr}
+  .grid3{grid-template-columns:1fr}
+  .ops-controls .btn{flex:1 1 auto;min-width:calc(50% - 4px);justify-content:center}
+}
+@media(max-width:400px){
+  .header-status .divider{display:none}
+  .header-status{font-size:10px;gap:6px 10px}
 }
 </style>
 </head>
@@ -257,12 +392,14 @@ textarea.sitrep-text{min-height:120px}
   <div class="drawer-scroll">
     <div class="drawer-group-label">Board</div>
     <button type="button" class="drawer-nav-btn" onclick="switchTab('objectives')">🎯 Mission</button>
+    <button type="button" class="drawer-nav-btn" onclick="switchTab('signal')">📡 Signal board</button>
     <button type="button" class="drawer-nav-btn" onclick="switchTab('roles')">👥 Operations &amp; roles</button>
     <button type="button" class="drawer-nav-btn" onclick="switchTab('logistics')">🗺 Waypoints</button>
     <button type="button" class="drawer-nav-btn" onclick="switchTab('requests')">📦 Supply board</button>
     <button type="button" class="drawer-nav-btn" onclick="switchTab('modpack')">🎮 Strategy vote</button>
     <button type="button" class="drawer-nav-btn" onclick="switchTab('admin')">🛠 Admin &amp; cloud</button>
     <div class="drawer-group-label">Quick actions</div>
+    <button type="button" class="drawer-nav-btn" onclick="toggleCheatsheet(); closeSideDrawer();">⌨ Keyboard shortcuts</button>
     <button type="button" class="drawer-nav-btn" onclick="copyOpsBriefMd(); closeSideDrawer();">📋 Copy Markdown brief</button>
     <button type="button" class="drawer-nav-btn" onclick="copySquadPing(); closeSideDrawer();">📣 Copy squad ping</button>
     <button type="button" class="drawer-nav-btn" onclick="exportPlan(); closeSideDrawer();">💾 Export board JSON</button>
@@ -272,7 +409,7 @@ textarea.sitrep-text{min-height:120px}
     <a class="drawer-link-out" href="https://www.chunkbase.com/" target="_blank" rel="noopener noreferrer">Chunkbase (seed tools)</a>
     <a class="drawer-link-out" href="https://fabricmc.net/" target="_blank" rel="noopener noreferrer">Fabric</a>
     <a class="drawer-link-out" href="https://modrinth.com/" target="_blank" rel="noopener noreferrer">Modrinth</a>
-    <p class="drawer-hint">Links open in a new tab. Use the Mission tab headers (− / +) to fold sections you are not editing; your choices are saved in this browser.</p>
+    <p class="drawer-hint">On a phone, swipe the tab bar sideways to reach every board. Links open in a new tab. Mission section headers (− / +) fold what you are not editing — saved in this browser.</p>
   </div>
 </aside>
 <div class="war-room">
@@ -282,8 +419,9 @@ textarea.sitrep-text{min-height:120px}
         <span></span><span></span><span></span>
       </button>
       <div>
-      <div class="header-logo">// WAR ROOM TACTICAL LAYER v1.5.0</div>
+      <div class="header-logo">// WAR ROOM TACTICAL LAYER v1.8.0</div>
       <div class="header-title">⚔ COMMAND CENTER</div>
+      <div class="header-live-line" id="header-session-live" aria-live="polite"></div>
       </div>
     </div>
     <div class="header-status">
@@ -295,12 +433,15 @@ textarea.sitrep-text{min-height:120px}
       <span class="divider">|</span>
       <span><span class="dot amber"></span> SESSION</span>
       <span class="divider">|</span>
+      <button type="button" class="btn btn-sm" onclick="toggleCheatsheet()" title="Keyboard shortcuts (? )">?</button>
+      <button type="button" class="btn btn-sm" onclick="cycleTheme()" id="btn-theme" title="Cycle theme: default · high contrast · reader">Theme</button>
       <button type="button" class="btn btn-sm" onclick="toggleCommandMode()">COMMAND MODE</button>
     </div>
   </div>
 
   <div class="tabs">
     <div class="tab active" onclick="switchTab('objectives')">🎯 Mission</div>
+    <div class="tab" onclick="switchTab('signal')">📡 Signal</div>
     <div class="tab" onclick="switchTab('roles')">👥 Operations</div>
     <div class="tab" onclick="switchTab('logistics')">🗺 Waypoints</div>
     <div class="tab" onclick="switchTab('requests')">📦 Supply Board</div>
@@ -330,13 +471,14 @@ textarea.sitrep-text{min-height:120px}
           <button class="btn btn-sm btn-danger" onclick="resetBoard()">Reset</button>
           <input type="file" id="import-file" accept=".json" onchange="importPlan(event)">
         </div>
-        <div class="shortcut-hint">Shortcuts: 1-6 tabs, N objective, L location, R request</div>
+        <div class="shortcut-hint">Shortcuts: 1-7 tabs · N objective · P signal ping · L location · R request</div>
         <div class="sync-status" id="cloud-status">Cloud: local mode only</div>
       </div>
       <div class="cmd-card user-card">
         <div class="cmd-label">Active Operator</div>
         <select id="active-user" onchange="setActiveUser(this.value)"></select>
         <div class="perm-note" id="active-user-role"></div>
+        <div class="perm-note" id="operator-presence-line" style="margin-top:8px"></div>
       </div>
     </div>
 
@@ -490,6 +632,58 @@ textarea.sitrep-text{min-height:120px}
       </div>
     </div>
 
+    <!-- SIGNAL BOARD -->
+    <div id="panel-signal" class="panel">
+      <div class="section-header"><i class="ti ti-antenna-bars-5"></i> Signal board — squad pings</div>
+      <p class="ping-board-lead">A <strong>shared wall</strong> for quick, signed blurbs. <strong>Reply</strong> threads a quote above your ping. Filter when the wall gets long. <strong>Sign pings as</strong> sets a callsign on <em>this device only</em> (still the same operator id for permissions). <strong>P</strong> jumps here from anywhere outside a field.</p>
+      <div class="card ping-board-card">
+        <div class="ping-compose">
+          <div>
+            <div class="form-label">Sign pings as (optional · this browser only)</div>
+            <input type="text" id="callsign-input" maxlength="40" placeholder="e.g. Foxtrot — defaults to Active operator name" autocomplete="nickname" onblur="saveCallsign()">
+          </div>
+          <div class="ping-compose-row">
+            <div>
+              <div class="form-label">Ping type</div>
+              <select id="squad-note-kind" aria-label="Ping type">
+                <option value="intel">Intel</option>
+                <option value="need">Need / ask</option>
+                <option value="eta">ETA / timing</option>
+                <option value="lol">Banter</option>
+                <option value="misc" selected>Misc</option>
+              </select>
+            </div>
+          </div>
+          <div id="ping-reply-banner" class="ping-reply-banner" aria-live="polite"></div>
+          <div>
+            <div class="form-label">Your ping</div>
+            <textarea id="squad-note-input" class="sitrep-text" rows="4" maxlength="480" placeholder="Nether hub at base — meet in 10 · or: anyone spare iron?" oninput="onPingInputLength()"></textarea>
+            <p class="ping-hint-warn" id="ping-length-hint" style="display:none">Approaching length limit — consider a second ping if you need more detail.</p>
+          </div>
+          <button type="button" class="btn btn-sm" onclick="postSquadNote()">Transmit ping</button>
+          <p class="shortcut-hint">Ctrl+Enter or ⌘+Enter sends. Long pastes are trimmed to 480 characters. <code>http</code> links become clickable after send.</p>
+        </div>
+        <div class="ping-filters">
+          <div>
+            <div class="form-label">Filter type</div>
+            <select id="ping-filter-kind" aria-label="Filter by ping type" onchange="renderSquadNotes()">
+              <option value="">All types</option>
+              <option value="intel">Intel</option>
+              <option value="need">Need / ask</option>
+              <option value="eta">ETA</option>
+              <option value="lol">Banter</option>
+              <option value="misc">Misc</option>
+            </select>
+          </div>
+          <div style="flex:1;min-width:140px">
+            <div class="form-label">Filter by name</div>
+            <input type="text" id="ping-filter-author" placeholder="Substring match" oninput="renderSquadNotes()">
+          </div>
+        </div>
+        <div id="squad-notes-list" class="ping-stream" aria-live="polite"></div>
+      </div>
+    </div>
+
     <!-- ROLES -->
     <div id="panel-roles" class="panel">
       <div class="section-header"><i class="ti ti-users"></i> Squad Role Assignments</div>
@@ -561,12 +755,12 @@ textarea.sitrep-text{min-height:120px}
       <!-- Add new modpack form -->
       <div class="section-header" style="margin-top:16px"><i class="ti ti-plus"></i> Add a Modpack</div>
       <div class="card" style="margin-bottom:12px">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div class="mp-form-grid mp-form-grid-2">
           <div><div class="form-label">Modpack Name</div><input type="text" id="mp-name" placeholder="e.g. All the Mods 9"></div>
           <div><div class="form-label">Tag / Focus</div><input type="text" id="mp-tag" placeholder="e.g. Kitchen Sink"></div>
         </div>
         <div style="margin-bottom:10px"><div class="form-label">Description</div><input type="text" id="mp-desc" placeholder="What makes this pack good for the squad..."></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+        <div class="mp-form-grid mp-form-grid-3">
           <div>
             <div class="form-label">Complexity (0–100)</div>
             <input type="text" id="mp-complexity" placeholder="50">
@@ -621,7 +815,24 @@ textarea.sitrep-text{min-height:120px}
       </div>
     </div>
 
-    <div class="site-footer">War Room v1.5.0 · Session context · waypoints · objectives · Commander sets the beat</div>
+    <div class="site-footer">War Room v1.8.0 · Session context · waypoints · objectives · Commander sets the beat</div>
+  </div>
+</div>
+
+<div id="cheatsheet-modal" class="modal-backdrop" onclick="cheatsheetBackdropClick(event)" aria-hidden="true">
+  <div class="modal-sheet" role="dialog" aria-labelledby="cheatsheet-title" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <h3 id="cheatsheet-title">Keyboard</h3>
+      <button type="button" class="modal-close" onclick="toggleCheatsheet()" aria-label="Close">×</button>
+    </div>
+    <p class="shortcut-hint" style="margin-bottom:12px">Press <span class="cheatsheet-k">?</span> anytime (when not typing) to toggle this sheet.</p>
+    <div class="cheatsheet-row"><span>Tabs</span><span class="cheatsheet-k">1–7</span></div>
+    <div class="cheatsheet-row"><span>Mission · focus new objective</span><span class="cheatsheet-k">N</span></div>
+    <div class="cheatsheet-row"><span>Signal · focus ping box</span><span class="cheatsheet-k">P</span></div>
+    <div class="cheatsheet-row"><span>Waypoints · focus location</span><span class="cheatsheet-k">L</span></div>
+    <div class="cheatsheet-row"><span>Supply · focus request</span><span class="cheatsheet-k">R</span></div>
+    <div class="cheatsheet-row"><span>Close menus</span><span class="cheatsheet-k">Esc</span></div>
+    <div class="cheatsheet-row"><span>Transmit ping (Signal tab)</span><span class="cheatsheet-k">Ctrl+Enter</span></div>
   </div>
 </div>
 
@@ -629,6 +840,8 @@ textarea.sitrep-text{min-height:120px}
 const STORAGE_KEY='war_room_state_v1';
 const REMOTE_CONFIG_KEY='war_room_remote_cfg_v1';
 const MISSION_COLLAPSE_KEY='war_room_mission_collapse_v1';
+const CALLSIGN_KEY='war_room_callsign_v1';
+const THEME_KEY='war_room_theme_v1';
 const defaults={
   commandMode:false,
   currentUserId:'u_cmd',
@@ -654,13 +867,13 @@ const defaults={
     defaultDimension:'overworld'
   },
   objectives:[
-    {text:'Find a safe base location (flat terrain, near trees + water)',priority:'crit',owner:'Pathfinder',status:'active',done:false,updatedAt:Date.now()},
-    {text:'Build starter shelter before first night',priority:'crit',owner:'Foreman',status:'active',done:false,updatedAt:Date.now()},
-    {text:'Set up communal chest storage system',priority:'high',owner:'Quartermaster',status:'active',done:false,updatedAt:Date.now()},
-    {text:'Locate iron ore vein — minimum 64 blocks',priority:'high',owner:'Pathfinder',status:'blocked',done:false,updatedAt:Date.now()},
-    {text:'Establish farm (wheat + carrots minimum)',priority:'high',owner:'Steward',status:'active',done:false,updatedAt:Date.now()},
-    {text:'Scout nearby biomes and log coordinates',priority:'med',owner:'Pathfinder',status:'active',done:false,updatedAt:Date.now()},
-    {text:'Build Nether portal (post iron age)',priority:'med',owner:'Vanguard',status:'idle',done:false,updatedAt:Date.now()}
+    {text:'Find a safe base location (flat terrain, near trees + water)',priority:'crit',owner:'Pathfinder',status:'active',done:false,updatedAt:Date.now(),blockedReason:'',blockedLinksTo:null},
+    {text:'Build starter shelter before first night',priority:'crit',owner:'Foreman',status:'active',done:false,updatedAt:Date.now(),blockedReason:'',blockedLinksTo:null},
+    {text:'Set up communal chest storage system',priority:'high',owner:'Quartermaster',status:'active',done:false,updatedAt:Date.now(),blockedReason:'',blockedLinksTo:null},
+    {text:'Locate iron ore vein — minimum 64 blocks',priority:'high',owner:'Pathfinder',status:'blocked',done:false,updatedAt:Date.now(),blockedReason:'Need pickaxe + torches for safe branch mine',blockedLinksTo:null},
+    {text:'Establish farm (wheat + carrots minimum)',priority:'high',owner:'Steward',status:'active',done:false,updatedAt:Date.now(),blockedReason:'',blockedLinksTo:null},
+    {text:'Scout nearby biomes and log coordinates',priority:'med',owner:'Pathfinder',status:'active',done:false,updatedAt:Date.now(),blockedReason:'',blockedLinksTo:null},
+    {text:'Build Nether portal (post iron age)',priority:'med',owner:'Vanguard',status:'idle',done:false,updatedAt:Date.now(),blockedReason:'',blockedLinksTo:null}
   ],
   roles:[
     {icon:'🏗',name:'The Foreman',player:'Unassigned',task:'Base layout, building standards, room planning.',status:'idle'},
@@ -689,10 +902,18 @@ const defaults={
     {id:'cp_seeded_2',title:'Tooling runway (iron baseline)',targetNote:'Before day 2',done:false},
     {id:'cp_seeded_3',title:'Squad sync / first win',targetNote:'Commander sets beat',done:false}
   ],
-  sitrep:''
+  sitrep:'',
+  squadNotes:[],
+  operatorPresence:{}
 };
 
 let state=loadState();
+let flashPingId=null;
+let applyingRemoteBoardMerge=false;
+let lastLocalEditMs=0;
+let replyDraft=null;
+const MAX_SQUAD_NOTES=120;
+const MAX_SQUAD_NOTE_CHARS=480;
 let remote={
   url:'',
   anonKey:'',
@@ -767,15 +988,59 @@ function normalizeState(parsed){
       }))
     : structuredClone(defaults.locations);
 
+  const rawObj=Array.isArray(parsed.objectives)?parsed.objectives:null;
+  const safeObjectives=rawObj
+    ? rawObj.map((o,i)=>({
+        text:typeof o.text==='string'&&o.text?o.text:'Objective '+(i+1),
+        priority:['crit','high','med'].includes(o.priority)?o.priority:'med',
+        owner:typeof o.owner==='string'&&o.owner?o.owner:'Unassigned',
+        status:['active','blocked','idle','done'].includes(o.status)?o.status:'active',
+        done:!!o.done,
+        updatedAt:typeof o.updatedAt==='number'?o.updatedAt:Date.now(),
+        blockedReason:typeof o.blockedReason==='string'?o.blockedReason.slice(0,220):'',
+        blockedLinksTo:typeof o.blockedLinksTo==='number'&&o.blockedLinksTo>=0?o.blockedLinksTo:null
+      }))
+    : structuredClone(defaults.objectives);
+  safeObjectives.forEach((o,i)=>{
+    if(o.blockedLinksTo!=null&&(o.blockedLinksTo>=safeObjectives.length||o.blockedLinksTo===i))o.blockedLinksTo=null;
+  });
+
+  const pr=parsed.operatorPresence&&typeof parsed.operatorPresence==='object'?parsed.operatorPresence:{};
+  const safePresence={};
+  Object.keys(pr).forEach(k=>{
+    if(typeof pr[k]==='number'&&pr[k]>0)safePresence[k]=pr[k];
+  });
+
+  const allowedKinds=['intel','need','eta','lol','misc'];
+  const rawSq=Array.isArray(parsed.squadNotes)?parsed.squadNotes:[];
+  const safeSquadNotes=rawSq
+    .map((n,i)=>({
+      id:typeof n.id==='string'&&n.id?n.id:('sn_'+i+'_'+Date.now()),
+      text:typeof n.text==='string'?n.text.slice(0,MAX_SQUAD_NOTE_CHARS):'',
+      userId:typeof n.userId==='string'?n.userId:'',
+      userName:typeof n.userName==='string'&&n.userName?n.userName.slice(0,80):'Unknown',
+      kind:allowedKinds.includes(n.kind)?n.kind:'misc',
+      createdAt:typeof n.createdAt==='number'?n.createdAt:Date.now(),
+      replyToId:typeof n.replyToId==='string'?n.replyToId:'',
+      replyUser:typeof n.replyUser==='string'?n.replyUser.slice(0,80):'',
+      replyExcerpt:typeof n.replyExcerpt==='string'?n.replyExcerpt.slice(0,120):''
+    }))
+    .filter(n=>n.text.trim())
+    .sort((a,b)=>b.createdAt-a.createdAt)
+    .slice(0,MAX_SQUAD_NOTES);
+
   return {
     ...structuredClone(defaults),
     ...parsed,
     command:{...defaults.command,...(parsed.command||{})},
     votes:{...defaults.votes,...(parsed.votes||{})},
     users:safeUsers,
+    objectives:safeObjectives,
     checkpoints:safeCheckpoints,
     sessionMeta:safeSessionMeta,
     locations:safeLocations,
+    squadNotes:safeSquadNotes,
+    operatorPresence:safePresence,
     sitrep:typeof parsed.sitrep==='string'?parsed.sitrep:'',
     currentUserId:parsed.currentUserId || defaults.currentUserId,
     editingObjectiveIndex:null,
@@ -785,14 +1050,27 @@ function normalizeState(parsed){
 }
 
 function saveLocalState(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
-function saveState(){saveLocalState(); queueCloudSync();}
+function saveState(){
+  if(!applyingRemoteBoardMerge){
+    lastLocalEditMs=Date.now();
+    try{
+      const u=getCurrentUser();
+      if(u){
+        state.operatorPresence=state.operatorPresence&&typeof state.operatorPresence==='object'?{...state.operatorPresence}:{};
+        state.operatorPresence[u.id]=Date.now();
+      }
+    }catch(_){}
+  }
+  saveLocalState();
+  queueCloudSync();
+}
 function stamp(){return Date.now();}
 function timeLabel(ts){return new Date(ts||Date.now()).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});}
-function showToast(msg){
+function showToast(msg,durationMs){
   const t=document.getElementById('toast');
   t.textContent=msg;
   t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),1300);
+  setTimeout(()=>t.classList.remove('show'),durationMs||1300);
 }
 function clamp(v){return Math.min(100,Math.max(0,parseInt(v,10)||50));}
 function getCurrentUser(){return state.users.find(u=>u.id===state.currentUserId) || state.users[0];}
@@ -809,6 +1087,126 @@ function requireObjective(action){
 
 function dimensionLabel(d){
   return {overworld:'Overworld',nether:'Nether',end:'End',na:'—'}[d]||d||'—';
+}
+
+function renderHeaderLive(){
+  const el=document.getElementById('header-session-live');
+  if(!el)return;
+  const sm=state.sessionMeta||defaults.sessionMeta;
+  const w=(sm.worldLabel||'').trim();
+  const g1=(state.command.sessionGoal||'').trim();
+  const g2=(state.command.sessionGoalSub||'').trim();
+  const goalLine=[g1,g2].filter(Boolean).join(' · ');
+  if(!w&&!goalLine){el.innerHTML='';return;}
+  el.innerHTML=(w?`<span class="live-world">${escapeHtml(w)}</span>`:'')
+    +((w&&goalLine)?' · ':'')
+    +(goalLine?`<span class="live-goal">${escapeHtml(goalLine)}</span>`:'');
+}
+
+const THEMES=['default','high-contrast','reader'];
+function applySavedTheme(){
+  const t=localStorage.getItem(THEME_KEY)||'default';
+  document.documentElement.classList.remove('theme-high-contrast','theme-reader');
+  if(t==='high-contrast')document.documentElement.classList.add('theme-high-contrast');
+  if(t==='reader')document.documentElement.classList.add('theme-reader');
+  const mc=document.getElementById('meta-theme-color');
+  if(mc)mc.setAttribute('content',t==='high-contrast'?'#020402':'#0a0f0a');
+}
+function cycleTheme(){
+  const cur=localStorage.getItem(THEME_KEY)||'default';
+  let i=THEMES.indexOf(cur);
+  if(i<0)i=0;
+  const next=THEMES[(i+1)%THEMES.length];
+  localStorage.setItem(THEME_KEY,next);
+  applySavedTheme();
+  const label=next==='default'?'default':next==='high-contrast'?'high contrast':'reader';
+  showToast('Theme: '+label);
+}
+function toggleCheatsheet(){
+  const m=document.getElementById('cheatsheet-modal');
+  if(!m)return;
+  const open=!m.classList.contains('is-open');
+  m.classList.toggle('is-open',open);
+  m.setAttribute('aria-hidden',open?'false':'true');
+}
+function cheatsheetBackdropClick(e){
+  if(e.target===e.currentTarget)toggleCheatsheet();
+}
+
+function getPingDisplayName(){
+  try{
+    const c=localStorage.getItem(CALLSIGN_KEY);
+    if(c&&c.trim())return c.trim().slice(0,40);
+  }catch(_){}
+  const u=getCurrentUser();
+  return u?u.name:'Unknown';
+}
+function saveCallsign(){
+  const el=document.getElementById('callsign-input');
+  if(!el)return;
+  const v=el.value.trim();
+  try{
+    if(v)localStorage.setItem(CALLSIGN_KEY,v);
+    else localStorage.removeItem(CALLSIGN_KEY);
+  }catch(_){}
+}
+function populateCallsignField(){
+  const el=document.getElementById('callsign-input');
+  if(!el)return;
+  try{el.value=localStorage.getItem(CALLSIGN_KEY)||'';}catch(_){el.value='';}
+}
+
+function onPingInputLength(){
+  const ta=document.getElementById('squad-note-input');
+  const h=document.getElementById('ping-length-hint');
+  if(!ta||!h)return;
+  h.style.display=ta.value.length>400?'block':'none';
+}
+function linkifyEscaped(escapedLine){
+  return escapedLine.replace(/(https?:\/\/[^\s<]+[^\s<)"']*)/g,'<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+}
+function formatPingBody(text){
+  return String(text||'').split('\n').map(line=>linkifyEscaped(escapeHtml(line))).join('<br>');
+}
+function clearReplyDraft(){
+  replyDraft=null;
+  showReplyBanner();
+}
+function replyToPing(id){
+  const n=state.squadNotes&&state.squadNotes.find(x=>x.id===id);
+  if(!n)return;
+  replyDraft={id:n.id,user:n.userName||'Unknown',excerpt:n.text.slice(0,100)};
+  showReplyBanner();
+  switchTab('signal');
+  setTimeout(()=>document.getElementById('squad-note-input')?.focus(),80);
+}
+function showReplyBanner(){
+  const el=document.getElementById('ping-reply-banner');
+  if(!el)return;
+  if(!replyDraft){el.style.display='none';el.innerHTML='';return;}
+  el.style.display='block';
+  el.innerHTML='↳ Replying to <strong>'+escapeHtml(replyDraft.user)+'</strong>: '+escapeHtml(replyDraft.excerpt)+(replyDraft.excerpt.length>=100?'…':'')
+    +' <button type="button" class="btn btn-sm" onclick="clearReplyDraft()">Cancel</button>';
+}
+
+function formatPresenceRel(ts){
+  if(!ts)return '';
+  const s=Math.max(0,Math.floor((Date.now()-ts)/1000));
+  if(s<45)return 'just now';
+  if(s<3600)return Math.floor(s/60)+'m ago';
+  if(s<86400)return Math.floor(s/3600)+'h ago';
+  return Math.floor(s/86400)+'d ago';
+}
+function renderPresenceLine(){
+  const el=document.getElementById('operator-presence-line');
+  if(!el)return;
+  const pr=state.operatorPresence||{};
+  const parts=[];
+  (state.users||[]).forEach(u=>{
+    const t=pr[u.id];
+    if(t)parts.push(u.name+': '+formatPresenceRel(t));
+  });
+  el.textContent=parts.length?'Last active (approx): '+parts.join(' · '):'';
 }
 
 function populateSessionMeta(){
@@ -838,6 +1236,7 @@ function saveSessionMeta(){
   };
   saveState();
   syncWaypointDimensionSelect();
+  renderHeaderLive();
   showToast('Session info saved');
 }
 
@@ -868,6 +1267,115 @@ function renderUpNext(){
         </div>
       </div>
     </div>`).join('');
+}
+
+function squadPingKindLabel(k){
+  return {intel:'INTEL',need:'NEED',eta:'ETA',lol:'BANTER',misc:'NOTE'}[k]||'NOTE';
+}
+function squadPingAccentClass(userId){
+  const s=String(userId||'');
+  let h=0;
+  for(let i=0;i<s.length;i++)h=(h+s.charCodeAt(i)*13)%997;
+  return 'ping-accent-'+(h%4);
+}
+function canDeleteSquadNote(note){
+  const u=getCurrentUser();
+  if(!note||!u)return false;
+  if(note.userId&&note.userId===u.id)return true;
+  if(u.role==='Commander')return true;
+  return false;
+}
+function postSquadNote(){
+  const ta=document.getElementById('squad-note-input');
+  const kindEl=document.getElementById('squad-note-kind');
+  let raw=(ta&&ta.value||'').trim();
+  if(!raw)return showToast('Write a ping first');
+  if(raw.length>MAX_SQUAD_NOTE_CHARS){
+    raw=raw.slice(0,MAX_SQUAD_NOTE_CHARS);
+    showToast('Ping trimmed to '+MAX_SQUAD_NOTE_CHARS+' characters',2000);
+  }
+  const u=getCurrentUser();
+  if(!u)return;
+  if(!Array.isArray(state.squadNotes))state.squadNotes=[];
+  const id='sn_'+stamp()+'_'+Math.random().toString(36).slice(2,9);
+  const replyExtra=replyDraft?{
+    replyToId:replyDraft.id,
+    replyUser:replyDraft.user,
+    replyExcerpt:replyDraft.excerpt
+  }:{replyToId:'',replyUser:'',replyExcerpt:''};
+  state.squadNotes.unshift({
+    id,
+    text:raw,
+    userId:u.id,
+    userName:getPingDisplayName(),
+    kind:(kindEl&&kindEl.value)||'misc',
+    createdAt:stamp(),
+    ...replyExtra
+  });
+  while(state.squadNotes.length>MAX_SQUAD_NOTES)state.squadNotes.pop();
+  if(ta)ta.value='';
+  replyDraft=null;
+  showReplyBanner();
+  onPingInputLength();
+  flashPingId=id;
+  saveState();
+  renderSquadNotes();
+  showToast('Ping transmitted');
+  setTimeout(()=>{
+    if(flashPingId===id){
+      flashPingId=null;
+      renderSquadNotes();
+    }
+  },2400);
+}
+function removeSquadNote(id){
+  const note=state.squadNotes&&state.squadNotes.find(n=>n.id===id);
+  if(!note)return;
+  if(!canDeleteSquadNote(note)){showToast('Only the author or Commander can drop a ping');return;}
+  state.squadNotes=state.squadNotes.filter(n=>n.id!==id);
+  saveState();
+  renderSquadNotes();
+  showToast('Ping dropped');
+}
+function renderSquadNotes(){
+  const box=document.getElementById('squad-notes-list');
+  if(!box)return;
+  const fk=document.getElementById('ping-filter-kind')?.value||'';
+  const fa=(document.getElementById('ping-filter-author')?.value||'').trim().toLowerCase();
+  const hasFilters=!!(fk||fa);
+  let notes=Array.isArray(state.squadNotes)?[...state.squadNotes].sort((a,b)=>b.createdAt-a.createdAt):[];
+  if(fk)notes=notes.filter(n=>n.kind===fk);
+  if(fa)notes=notes.filter(n=>String(n.userName||'').toLowerCase().includes(fa));
+  if(!notes.length){
+    box.innerHTML='<div class="shortcut-hint">'+(hasFilters?'No pings match these filters.':'No pings yet — be the first on the wire.')+'</div>';
+    return;
+  }
+  box.innerHTML=notes.map(n=>{
+    const del=canDeleteSquadNote(n)
+      ?`<button type="button" class="btn btn-sm btn-danger ping-remove" onclick='removeSquadNote(${JSON.stringify(n.id)})'>Drop</button>`
+      :'';
+    const fresh=n.id===flashPingId?' ping-fresh':'';
+    const initials=String(n.userName||'?').trim().slice(0,1).toUpperCase()||'?';
+    const when=new Date(n.createdAt);
+    const dateStr=when.toLocaleDateString([],{month:'short',day:'numeric'});
+    const replyCtx=(n.replyExcerpt&&n.replyUser)
+      ?`<div class="ping-reply-context">↳ ${escapeHtml(n.replyUser)}: ${escapeHtml(n.replyExcerpt)}${String(n.replyExcerpt).length>=100?'…':''}</div>`
+      :'';
+    return `<article class="ping-note ${squadPingAccentClass(n.userId)}${fresh}">
+      <div class="ping-note-head">
+        <span class="ping-avatar" aria-hidden="true">${escapeHtml(initials)}</span>
+        <div class="ping-note-meta">
+          <span class="ping-author">${escapeHtml(n.userName||'Unknown')}</span>
+          <span class="ping-kind kind-${escapeHtml(n.kind)}">${squadPingKindLabel(n.kind)}</span>
+          <span class="ping-time">${timeLabel(n.createdAt)} · ${dateStr}</span>
+        </div>
+        <button type="button" class="btn btn-sm ping-remove" style="margin-left:0" onclick='replyToPing(${JSON.stringify(n.id)})'>Reply</button>
+        ${del}
+      </div>
+      ${replyCtx}
+      <div class="ping-body">${formatPingBody(n.text)}</div>
+    </article>`;
+  }).join('');
 }
 
 function copyWaypointLine(i){
@@ -932,7 +1440,9 @@ function buildMarkdownBrief(){
   const op=state.objectives.filter(o=>!o.done);
   if(!op.length)lines.push('_All clear._');
   else op.forEach(o=>{
-    lines.push('- **'+o.priority.toUpperCase()+'** ['+o.status+'] '+o.text.replace(/\*/g,'')+' _(owner: '+String(o.owner).replace(/\*/g,'')+')_');
+    let ln='- **'+o.priority.toUpperCase()+'** ['+o.status+'] '+o.text.replace(/\*/g,'')+' _(owner: '+String(o.owner).replace(/\*/g,'')+')_';
+    if(o.blockedReason&&String(o.blockedReason).trim())ln+=' _Blocked: '+String(o.blockedReason).replace(/\*/g,'')+'_';
+    lines.push(ln);
   });
   lines.push('');
   lines.push('## Supply board');
@@ -948,6 +1458,16 @@ function buildMarkdownBrief(){
   lines.push('');
   lines.push('## Situation scratch');
   lines.push(state.sitrep&&state.sitrep.trim()?state.sitrep.trim():'_Empty._');
+  lines.push('');
+  lines.push('## Signal board (pings)');
+  const pings=Array.isArray(state.squadNotes)?[...state.squadNotes].sort((a,b)=>b.createdAt-a.createdAt):[];
+  if(!pings.length)lines.push('_No pings yet._');
+  else pings.forEach(n=>{
+    const ts=new Date(n.createdAt).toISOString();
+    let ln='- **'+squadPingKindLabel(n.kind)+'** _'+String(n.userName||'').replace(/\*/g,'')+'_ @ '+ts+': '+String(n.text).replace(/\*/g,'');
+    if(n.replyExcerpt&&n.replyUser)ln+=' _(re '+String(n.replyUser).replace(/\*/g,'')+': '+String(n.replyExcerpt).replace(/\*/g,'')+')_';
+    lines.push(ln);
+  });
   lines.push('');
   lines.push('---');
   lines.push('_Exported '+new Date().toISOString()+'_');
@@ -969,7 +1489,7 @@ function copySquadPing(){
     sm.worldLabel?('🌍 '+sm.worldLabel):null,
     '🎯 '+state.command.mission,
     next?'▸ Next: '+next.text:'✅ No open objectives',
-    blocked?'🔴 BLOCKED: '+blocked.text:null,
+    blocked?('🔴 BLOCKED: '+blocked.text+(blocked.blockedReason&&String(blocked.blockedReason).trim()?'\n   Why: '+blocked.blockedReason:'')):null,
     openReq.length?('📦 Supply: '+openReq.length+' open'+(hot?' ('+hot+' CRIT)':'')):null,
     '',
     '📎 '+String(window.location.href).split('#')[0]
@@ -1076,6 +1596,11 @@ function closeSideDrawer(){
   if(hb)hb.setAttribute('aria-expanded','false');
   document.body.style.overflow='';
 }
+function focusSignalBoard(){
+  switchTab('signal');
+  closeSideDrawer();
+  setTimeout(()=>document.getElementById('squad-note-input')?.focus(),60);
+}
 function switchTab(t){
   document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(el=>el.classList.remove('active'));
@@ -1105,6 +1630,7 @@ function renderCommand(){
   document.getElementById('cmd-milestone').textContent=next?next.text:state.command.milestone;
   renderActiveUser();
   renderOverview();
+  renderHeaderLive();
 }
 
 function renderOverview(){
@@ -1177,6 +1703,13 @@ function tickClock(){
 function renderObjectives(){
   const list=state.objectives.map((o,i)=>{
     if(state.editingObjectiveIndex===i){
+      let linkOpts='<option value="">— No linked objective —</option>';
+      state.objectives.forEach((ob,j)=>{
+        if(j===i)return;
+        const sel=o.blockedLinksTo===j?' selected':'';
+        const lab=(j+1)+'. '+escapeHtml(ob.text.length>68?ob.text.slice(0,68)+'…':ob.text);
+        linkOpts+=`<option value="${j}"${sel}>${lab}</option>`;
+      });
       return `<div class="obj-row">
         <div class="obj-edit-row">
           <input type="text" id="edit-obj-text" value="${escapeHtml(o.text)}">
@@ -1192,20 +1725,36 @@ function renderObjectives(){
             <option value="idle" ${o.status==='idle'?'selected':''}>IDLE</option>
             <option value="done" ${o.status==='done'?'selected':''}>DONE</option>
           </select>
+          <input type="text" id="edit-obj-blocked-reason" style="grid-column:1/-1" placeholder="If blocked — why? Waiting on what?" value="${escapeHtml(o.blockedReason||'')}">
+          <select id="edit-obj-blocked-link" style="grid-column:1/-1" aria-label="Link to another objective">${linkOpts}</select>
+          <span class="obj-edit-blocked-hint" style="grid-column:1/-1">Optional context for BLOCKED — links shift if rows are removed.</span>
           <button class="btn btn-sm" onclick="saveObjectiveEdit(${i})">Save</button>
           <button class="btn btn-sm btn-danger" onclick="cancelObjectiveEdit()">Cancel</button>
         </div>
       </div>`;
     }
+    let blockedHtml='';
+    const br=o.blockedReason&&String(o.blockedReason).trim();
+    const lk=o.blockedLinksTo!=null&&state.objectives[o.blockedLinksTo];
+    if(br||lk){
+      let inner='';
+      if(br)inner+=escapeHtml(br);
+      if(lk){
+        const snip=escapeHtml(lk.text.length>100?lk.text.slice(0,100)+'…':lk.text);
+        inner+=(inner?'<br>':'')+`↳ Linked: <span style="color:#8ab88a">${snip}</span>`;
+      }
+      blockedHtml=`<div class="obj-blocked-note">${inner}</div>`;
+    }
     return `<div class="obj-row">
-      <div class="obj-check ${o.done?'done':''}" onclick="toggleObj(${i})"><i class="ti ti-check"></i></div>
-      <div style="flex:1">
-        <div class="obj-text ${o.done?'done':''}">${o.text}</div>
+      <div class="obj-check ${o.done?'done':''}" onclick="toggleObj(${i})" role="checkbox" aria-checked="${o.done?'true':'false'}" title="Toggle done"><i class="ti ti-check"></i></div>
+      <div class="obj-main">
+        <div class="obj-text ${o.done?'done':''}">${escapeHtml(o.text)}</div>
         <div class="obj-meta">
-          <span class="obj-owner">Owner: ${o.owner||'Unassigned'}</span>
+          <span class="obj-owner">Owner: ${escapeHtml(o.owner||'Unassigned')}</span>
           <span class="meta-pill">${o.status.toUpperCase()}</span>
           <span class="obj-updated">Updated ${timeLabel(o.updatedAt)}</span>
         </div>
+        ${blockedHtml}
       </div>
       <span class="obj-priority pri-${o.priority}">${o.priority.toUpperCase()}</span>
       <div class="obj-actions">
@@ -1240,7 +1789,9 @@ function addObjective(){
     priority:document.getElementById('obj-priority').value||'high',
     status:'active',
     done:false,
-    updatedAt:stamp()
+    updatedAt:stamp(),
+    blockedReason:'',
+    blockedLinksTo:null
   });
   ['obj-text','obj-owner'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('obj-priority').value='high';
@@ -1271,6 +1822,15 @@ function saveObjectiveEdit(i){
   state.objectives[i].status=document.getElementById('edit-obj-status').value;
   state.objectives[i].done=state.objectives[i].status==='done';
   state.objectives[i].updatedAt=stamp();
+  const brEl=document.getElementById('edit-obj-blocked-reason');
+  const blEl=document.getElementById('edit-obj-blocked-link');
+  state.objectives[i].blockedReason=brEl?brEl.value.trim().slice(0,220):'';
+  if(blEl&&blEl.value!==''){
+    const v=parseInt(blEl.value,10);
+    state.objectives[i].blockedLinksTo=Number.isNaN(v)?null:v;
+  }else state.objectives[i].blockedLinksTo=null;
+  if(state.objectives[i].blockedLinksTo===i)state.objectives[i].blockedLinksTo=null;
+  if(state.objectives[i].blockedLinksTo!=null&&(state.objectives[i].blockedLinksTo>=state.objectives.length||state.objectives[i].blockedLinksTo<0))state.objectives[i].blockedLinksTo=null;
   state.editingObjectiveIndex=null;
   saveState();
   renderObjectives();
@@ -1281,6 +1841,11 @@ function saveObjectiveEdit(i){
 function removeObjective(i){
   if(!requireObjective('remove'))return;
   state.objectives.splice(i,1);
+  state.objectives.forEach(o=>{
+    if(o.blockedLinksTo==null)return;
+    if(o.blockedLinksTo===i)o.blockedLinksTo=null;
+    else if(o.blockedLinksTo>i)o.blockedLinksTo--;
+  });
   saveState();
   renderObjectives();
   renderCommand();
@@ -1399,12 +1964,17 @@ async function pushCloudState(){
 async function fetchCloudState(){
   const {data,error}=await remote.client.from('war_room_boards').select('data,updated_at').eq('workspace_id',remote.workspaceId).maybeSingle();
   if(error)throw error;
-  if(data && data.data){
-    state=normalizeState(data.data);
-    saveLocalState();
-    init();
-  }else{
-    await pushCloudState();
+  applyingRemoteBoardMerge=true;
+  try{
+    if(data && data.data){
+      state=normalizeState(data.data);
+      saveLocalState();
+      init();
+    }else{
+      await pushCloudState();
+    }
+  }finally{
+    applyingRemoteBoardMerge=false;
   }
 }
 
@@ -1423,9 +1993,16 @@ function subscribeCloud(){
       if(remote.isPushing)return;
       const incoming=payload.new && payload.new.data;
       if(!incoming)return;
-      state=normalizeState(incoming);
-      saveLocalState();
-      init();
+      const recentLocal=Date.now()-lastLocalEditMs<12000;
+      applyingRemoteBoardMerge=true;
+      try{
+        state=normalizeState(incoming);
+        saveLocalState();
+        init();
+        if(recentLocal)showToast('Squad updated the board — synced to latest.',4200);
+      }finally{
+        applyingRemoteBoardMerge=false;
+      }
       setCloudStatus(`Cloud: update received ${timeLabel(Date.now())}`,'ok');
     })
     .subscribe();
@@ -1771,10 +2348,15 @@ function resetBoard(){
 function bindShortcuts(){
   document.addEventListener('keydown',(e)=>{
     if(['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName) && e.key!=='Escape')return;
-    if(e.key>='1'&&e.key<='6'){
-      ['objectives','roles','logistics','requests','modpack','admin'].forEach((tab,i)=>{if(String(i+1)===e.key)switchTab(tab);});
+    if(e.key>='1'&&e.key<='7'){
+      ['objectives','signal','roles','logistics','requests','modpack','admin'].forEach((tab,i)=>{if(String(i+1)===e.key)switchTab(tab);});
     }else if(e.key.toLowerCase()==='n'){
       switchTab('objectives');document.getElementById('obj-text').focus();
+    }else if(e.key.toLowerCase()==='p'){
+      focusSignalBoard();
+    }else if(e.key==='?' || (e.shiftKey && e.key==='/')){
+      e.preventDefault();
+      toggleCheatsheet();
     }else if(e.key.toLowerCase()==='l'){
       switchTab('logistics');document.getElementById('loc-name').focus();
     }else if(e.key.toLowerCase()==='r'){
@@ -1794,6 +2376,10 @@ function bindShortcuts(){
       if(id==='cp-title')addCheckpoint();
     });
   });
+  const pingTa=document.getElementById('squad-note-input');
+  if(pingTa)pingTa.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();postSquadNote();}
+  });
 }
 
 function init(){
@@ -1812,20 +2398,28 @@ function init(){
   renderVoteSelect();
   renderVotes();
   renderCheckpoints();
+  renderSquadNotes();
   updateCloudPill();
 }
 
 function boot(){
   try{
+    applySavedTheme();
     document.addEventListener('keydown',e=>{
-      if(e.key==='Escape')closeSideDrawer();
+      if(e.key==='Escape'){
+        const m=document.getElementById('cheatsheet-modal');
+        if(m&&m.classList.contains('is-open')){e.preventDefault();toggleCheatsheet();return;}
+        closeSideDrawer();
+      }
     });
     loadRemoteConfig();
     bindShortcuts();
     tickClock();
     setInterval(tickClock,1000);
     init();
+    populateCallsignField();
     populateCloudFields();
+    setInterval(()=>{if(!document.hidden)renderPresenceLine();},60000);
     const sn=document.getElementById('sitrep-notes');
     if(sn)sn.addEventListener('input',queueSitrepSave);
     const joinedFromLink=tryAutoJoinFromHash();
