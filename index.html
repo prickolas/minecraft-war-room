@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0a0f0a" id="meta-theme-color">
-<title>⚔ War Room — Tactical Command Center</title>
+<title>War Room — co-op session board</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -15,11 +15,21 @@
   --green:#39ff14;--green-dim:#1a8c00;--green-dark:#0d4a00;--green-muted:#2a6600;
   --amber:#ffb300;--red:#ff3c3c;--blue:#00bfff;--purple:#bf80ff;
   --bg:#0a0f0a;--bg2:#0f160f;--bg3:#141e14;--border:#1f3d1f;--border2:#2a5a2a;
+  --ease-out:cubic-bezier(0.22,1,0.36,1);
+  --ease-spring:cubic-bezier(0.34,1.56,0.64,1);
+  --dur-fast:0.15s;
+  --dur-med:0.28s;
+  --shadow-card:0 4px 14px rgba(0,0,0,0.28);
+  --shadow-lift:0 12px 32px rgba(0,0,0,0.42),0 0 0 1px rgba(57,255,20,0.1);
 }
 html{color-scheme:dark}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important;scroll-behavior:auto!important}
+}
 html,body{min-height:100vh;background:radial-gradient(ellipse 120% 80% at 50% -20%,rgba(57,255,20,0.06),transparent 50%),var(--bg);font-family:'Exo 2',sans-serif;color:#c8e6c8;font-size:15px;line-height:1.5}
 body{padding:max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left))}
-.war-room{max-width:1200px;margin:0 auto;background:var(--bg);border:1px solid var(--border2);border-radius:10px;overflow:hidden;position:relative;box-shadow:0 0 0 1px rgba(57,255,20,0.08),0 24px 48px rgba(0,0,0,0.45),0 0 80px rgba(57,255,20,0.04)}
+.war-room{max-width:1200px;margin:0 auto;background:var(--bg);border:1px solid var(--border2);border-radius:12px;overflow:hidden;position:relative;box-shadow:0 0 0 1px rgba(57,255,20,0.08),0 24px 48px rgba(0,0,0,0.45),0 0 80px rgba(57,255,20,0.04);transition:box-shadow var(--dur-med) var(--ease-out),border-color var(--dur-med) var(--ease-out)}
+.war-room:hover{box-shadow:0 0 0 1px rgba(57,255,20,0.12),0 28px 56px rgba(0,0,0,0.5),0 0 100px rgba(57,255,20,0.06)}
 .war-room::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.06) 2px,rgba(0,0,0,0.06) 4px);pointer-events:none;z-index:0}
 .war-room>*{position:relative;z-index:1}
 .header{background:var(--bg2);border-bottom:1px solid var(--border2);padding:20px 28px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
@@ -27,6 +37,20 @@ body{padding:max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-r
 .header-title{font-family:'Exo 2',sans-serif;font-size:28px;font-weight:700;color:var(--green);letter-spacing:1px;text-transform:uppercase;text-shadow:0 0 24px rgba(57,255,20,0.25)}
 .header-status{display:flex;gap:12px;align-items:center;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--green-dim);margin-left:auto;flex-wrap:wrap}
 .header-clock{color:#6db86d;font-variant-numeric:tabular-nums}
+.header-session-pulse{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--amber);font-variant-numeric:tabular-nums;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.header-session-pulse.live{color:var(--green);text-shadow:0 0 12px rgba(57,255,20,0.35)}
+.ready-toggles{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.ready-chip{font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 10px;border-radius:3px;border:1px solid var(--border2);background:rgba(0,0,0,0.2);color:#8ab88a;cursor:pointer;transition:border-color .15s,color .15s,background .15s}
+.ready-chip.on{border-color:var(--green-muted);color:var(--green);background:rgba(57,255,20,0.08)}
+.ready-chip:hover{border-color:rgba(57,255,20,0.35)}
+.obj-spotlight{border:1px solid rgba(191,128,255,0.45);background:linear-gradient(135deg,rgba(191,128,255,0.08),transparent);border-radius:8px;padding:10px 12px;margin-bottom:12px}
+.obj-spotlight-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--purple);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.ping-reactions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;align-items:center}
+.ping-react-btn{font-size:14px;line-height:1;padding:2px 8px;border-radius:4px;border:1px solid var(--border2);background:rgba(0,0,0,0.2);cursor:pointer;transition:transform .12s ease,border-color .15s}
+.ping-react-btn:hover{border-color:rgba(57,255,20,0.35)}
+.ping-react-btn.on{border-color:var(--amber);background:rgba(255,179,0,0.08)}
+.ping-react-count{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--green-dim);margin-left:2px}
+.obj-row.is-pinned{border-left:3px solid var(--purple);padding-left:10px;margin-left:-4px}
 .cloud-pill{font-size:10px;padding:4px 10px;border-radius:3px;letter-spacing:1px;border:1px solid var(--border2)}
 .cloud-pill-local{color:#7a9a7a;background:rgba(0,0,0,0.25)}
 .cloud-pill-ok{color:var(--green);border-color:var(--green-muted);background:rgba(57,255,20,0.08);box-shadow:0 0 12px rgba(57,255,20,0.15)}
@@ -37,17 +61,27 @@ body{padding:max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-r
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
 .tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;touch-action:pan-x}
 .tabs::-webkit-scrollbar{display:none}
-.tab{padding:13px 22px;font-family:'Share Tech Mono',monospace;font-size:12px;cursor:pointer;color:var(--green-dim);border-right:1px solid var(--border);text-transform:uppercase;letter-spacing:1px;transition:all .2s;white-space:nowrap;position:relative;flex-shrink:0;scroll-snap-align:start}
-.tab.active{color:var(--green);background:var(--bg3)}
-.tab.active::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--green)}
-.tab:hover:not(.active){color:#6db86d;background:rgba(57,255,20,0.04)}
+.tab{padding:13px 22px;font-family:'Share Tech Mono',monospace;font-size:12px;cursor:pointer;color:var(--green-dim);border-right:1px solid var(--border);text-transform:uppercase;letter-spacing:1px;transition:color var(--dur-fast) ease,background var(--dur-fast) ease,transform var(--dur-fast) var(--ease-out);white-space:nowrap;position:relative;flex-shrink:0;scroll-snap-align:start}
+button.tab{font:inherit;color:inherit;margin:0;border:none;background:transparent;width:auto;text-align:center;-webkit-appearance:none;appearance:none}
+button.tab:focus-visible{outline:2px solid var(--green-muted);outline-offset:-2px}
+.tab:active{transform:scale(0.98)}
+.tab.active{color:var(--green);background:linear-gradient(180deg,rgba(57,255,20,0.1) 0%,var(--bg3) 100%);box-shadow:inset 0 -3px 0 var(--green),inset 0 0 24px rgba(57,255,20,0.05)}
+.tab:hover:not(.active){color:#6db86d;background:rgba(57,255,20,0.06)}
 .content{padding:22px}
-.panel{display:none}.panel.active{display:block}
+.panel{display:none}
+.panel.active{display:block;animation:panelReveal var(--dur-med) var(--ease-out) forwards}
+@keyframes panelReveal{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .section-header{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--green-dim);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px}
 .section-header i{font-size:14px;color:var(--green)}
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:14px}
 .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:14px}
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:16px}
+.card,.cmd-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;box-shadow:var(--shadow-card);transition:border-color var(--dur-fast) ease,box-shadow var(--dur-med) var(--ease-out),transform var(--dur-med) var(--ease-out)}
+.cmd-card{padding:12px 14px}
+@media (hover:hover){
+  .card:hover,.cmd-card:hover{border-color:var(--border2);box-shadow:var(--shadow-lift);transform:translateY(-2px)}
+  .collapsible-card:hover:not(.is-collapsed){border-color:rgba(57,255,20,0.25)}
+}
+.card:focus-within,.cmd-card:focus-within{border-color:rgba(57,255,20,0.35);box-shadow:var(--shadow-card),0 0 0 2px rgba(57,255,20,0.12)}
 .card-accent-green{border-left:3px solid var(--green)}
 .card-accent-amber{border-left:3px solid var(--amber)}
 .card-accent-red{border-left:3px solid var(--red)}
@@ -56,8 +90,10 @@ body{padding:max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-r
 .kpi-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--green-dim);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px}
 .kpi-value{font-size:28px;font-weight:700;color:var(--green);font-family:'Exo 2',sans-serif;line-height:1}
 .kpi-sub{font-size:12px;color:#5a8a5a;margin-top:4px}
-.role-card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:16px;margin-bottom:10px;display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:start}
-.role-icon{width:48px;height:48px;border-radius:4px;background:rgba(57,255,20,0.07);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.role-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:10px;display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:start;box-shadow:var(--shadow-card);transition:border-color var(--dur-fast) ease,transform var(--dur-med) var(--ease-out),box-shadow var(--dur-med) var(--ease-out)}
+@media (hover:hover){.role-card:hover{border-color:rgba(57,255,20,0.2);transform:translateY(-2px);box-shadow:var(--shadow-lift)}}
+.role-icon{width:48px;height:48px;border-radius:8px;background:rgba(57,255,20,0.07);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;transition:transform var(--dur-med) var(--ease-spring),box-shadow var(--dur-fast) ease}
+@media (hover:hover){.role-card:hover .role-icon{transform:scale(1.06);box-shadow:0 0 16px rgba(57,255,20,0.15)}}
 .role-name{font-weight:700;font-size:16px;color:var(--green);margin-bottom:3px}
 .role-player{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--amber);margin-bottom:6px}
 .role-task{font-size:13px;color:#8ab88a;line-height:1.6}
@@ -73,7 +109,8 @@ tr:hover td{background:rgba(57,255,20,0.03)}
 .coord{font-family:'Share Tech Mono',monospace;color:var(--blue);font-size:12px}
 .tier-bar{height:7px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:6px}
 .tier-fill{height:100%;background:linear-gradient(90deg,var(--green-dark),var(--green));border-radius:3px}
-.req-item{background:rgba(57,255,20,0.04);border:1px solid var(--border);border-radius:4px;padding:11px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.req-item{background:rgba(57,255,20,0.04);border:1px solid var(--border);border-radius:8px;padding:11px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;transition:border-color var(--dur-fast) ease,background var(--dur-fast) ease,transform var(--dur-med) var(--ease-out)}
+@media (hover:hover){.req-item:hover{border-color:rgba(57,255,20,0.25);background:rgba(57,255,20,0.07);transform:translateX(3px)}}
 .req-need{font-weight:600;color:#c8e6c8;font-size:14px;flex:1;min-width:120px}
 .req-offer{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--amber)}
 .req-who{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--green-dim);white-space:nowrap}
@@ -81,7 +118,11 @@ tr:hover td{background:rgba(57,255,20,0.03)}
 .obj-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);transition:background .15s}
 .obj-row:hover{background:rgba(57,255,20,0.02)}
 .obj-row:last-child{border-bottom:none}
-.obj-check{width:22px;height:22px;border:1px solid var(--green-muted);border-radius:2px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .2s;background:transparent}
+@keyframes objRowStaggerIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+.obj-row-stagger{animation:objRowStaggerIn 0.26s var(--ease-out) backwards;animation-delay:var(--obj-stagger,0ms)}
+.obj-check{width:22px;height:22px;border:1px solid var(--green-muted);border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:transform var(--dur-fast) var(--ease-spring),border-color var(--dur-fast) ease,background var(--dur-fast) ease,box-shadow var(--dur-fast) ease;background:transparent}
+.obj-check:hover{border-color:var(--green);box-shadow:0 0 10px rgba(57,255,20,0.2)}
+.obj-check:active{transform:scale(0.9)}
 .obj-check.done{background:var(--green-dark);border-color:var(--green)}
 .obj-check i{font-size:12px;color:var(--green);display:none}
 .obj-check.done i{display:block}
@@ -117,16 +158,20 @@ input[type=password]{background:var(--bg);border:1px solid var(--border2);color:
 input[type=password]:focus{border-color:var(--green);box-shadow:0 0 0 1px rgba(57,255,20,0.1)}
 .mission-progress-wrap{margin-top:10px}
 .mission-progress-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
-.mission-progress-fill{height:100%;background:linear-gradient(90deg,var(--green-dark),var(--green));border-radius:3px;transition:width .35s ease}
+.mission-progress-fill{height:100%;background:linear-gradient(90deg,var(--green-dark),var(--green),#7fff7f);border-radius:3px;transition:width 0.55s var(--ease-out);position:relative;overflow:hidden}
+.mission-progress-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);animation:progressShine 2.2s ease-in-out infinite}
+@keyframes progressShine{0%,100%{transform:translateX(-100%)}50%{transform:translateX(100%)}}
+@media (prefers-reduced-motion:reduce){.mission-progress-fill::after{display:none}}
 .brief-card{margin-bottom:14px}
 .brief-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .brief-grid .full{grid-column:1/-1}
 .site-footer{margin-top:18px;padding-top:14px;border-top:1px solid var(--border);font-family:'Share Tech Mono',monospace;font-size:10px;color:#4f7b4f;text-align:center;letter-spacing:1px}
 select{background:var(--bg);border:1px solid var(--border2);color:#c8e6c8;padding:8px 12px;border-radius:3px;font-family:'Share Tech Mono',monospace;font-size:12px;outline:none;flex:1;transition:border-color .2s}
 select:focus{border-color:var(--green)}
-.btn{background:transparent;border:1px solid var(--green-muted);color:var(--green);padding:8px 18px;border-radius:3px;font-family:'Share Tech Mono',monospace;font-size:11px;cursor:pointer;text-transform:uppercase;letter-spacing:1px;transition:all .2s;white-space:nowrap}
-.btn:hover{background:rgba(57,255,20,0.1);border-color:var(--green)}
-.btn:active{transform:scale(.98)}
+.btn{background:transparent;border:1px solid var(--green-muted);color:var(--green);padding:8px 18px;border-radius:6px;font-family:'Share Tech Mono',monospace;font-size:11px;cursor:pointer;text-transform:uppercase;letter-spacing:1px;transition:background var(--dur-fast) ease,border-color var(--dur-fast) ease,transform var(--dur-fast) var(--ease-out),box-shadow var(--dur-fast) ease;white-space:nowrap}
+.btn:hover{background:rgba(57,255,20,0.12);border-color:var(--green);box-shadow:0 0 16px rgba(57,255,20,0.12)}
+.btn:active{transform:scale(0.97)}
+.btn:focus-visible{outline:none;box-shadow:0 0 0 2px var(--bg),0 0 0 4px rgba(57,255,20,0.45)}
 .btn-sm{padding:5px 12px;font-size:10px}
 .btn-danger{border-color:rgba(255,60,60,0.4);color:var(--red)}
 .btn-danger:hover{background:rgba(255,60,60,0.1);border-color:var(--red)}
@@ -137,7 +182,6 @@ select:focus{border-color:var(--green)}
 .vote-controls{display:flex;gap:10px;margin-top:10px;align-items:center}
 .divider{color:var(--border2);margin:0 2px}
 .command-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:14px}
-.cmd-card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:12px 14px}
 .cmd-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--green-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
 .cmd-value{font-size:14px;color:#c8e6c8;font-weight:600}
 .cmd-value.blocker{color:var(--red)}
@@ -164,16 +208,18 @@ select:focus{border-color:var(--green)}
 .sync-status.bad{color:var(--red)}
 .admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .admin-card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:16px}
+.board-template-select{width:100%;max-width:100%;margin-top:6px;padding:8px;border-radius:4px;border:1px solid var(--border);background:var(--bg);color:#c8e6c8;font:inherit}
 .diag-box{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:10px;min-height:80px;font-family:'Share Tech Mono',monospace;font-size:11px;color:#a0c8a0;white-space:pre-wrap}
 .toast{position:fixed;bottom:max(20px, env(safe-area-inset-bottom));right:max(16px, env(safe-area-inset-right));left:auto;max-width:calc(100vw - 32px - env(safe-area-inset-left) - env(safe-area-inset-right));background:var(--bg2);border:1px solid var(--green-muted);padding:12px 14px;border-radius:4px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--green);opacity:0;transform:translateY(8px);transition:all .2s;pointer-events:none;z-index:10}
 .toast.show{opacity:1;transform:translateY(0)}
 .war-room.command-mode .kpi-value{font-size:32px}
-.war-room.command-mode .tab{font-size:13px;padding:14px 24px}
+.war-room.command-mode .tabs .tab{font-size:13px;padding:14px 24px}
 .war-room.command-mode .obj-text,.war-room.command-mode td,.war-room.command-mode .role-task,.war-room.command-mode .req-need{font-size:15px;color:#d5edd5}
 .war-room.command-mode .kpi-label,.war-room.command-mode .form-label,.war-room.command-mode .section-header{font-size:12px}
 .checkpoint-lead,.sitrep-lead{font-size:12px;color:#5a8a5a;margin-bottom:10px;line-height:1.5}
 .checkpoint-rail{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;margin-bottom:12px;scroll-snap-type:x mandatory}
-.checkpoint-node{flex:0 0 auto;min-width:160px;max-width:220px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;scroll-snap-align:start;transition:border-color .2s,box-shadow .2s}
+.checkpoint-node{flex:0 0 auto;min-width:160px;max-width:220px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;scroll-snap-align:start;transition:border-color var(--dur-fast) ease,box-shadow var(--dur-med) var(--ease-out),transform var(--dur-med) var(--ease-out)}
+@media (hover:hover){.checkpoint-node:hover:not(.done){border-color:rgba(57,255,20,0.35);box-shadow:0 6px 20px rgba(0,0,0,0.35);transform:translateY(-2px)}}
 .checkpoint-node.done{border-color:var(--green-muted);opacity:.65}
 .checkpoint-node .cp-title{font-weight:600;color:#c8e6c8;font-size:13px;margin-bottom:4px}
 .checkpoint-node .cp-note{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--amber)}
@@ -201,9 +247,10 @@ textarea.sitrep-text{min-height:120px}
 .ping-compose .btn{align-self:flex-start}
 .ping-stream{display:flex;flex-direction:column;gap:12px}
 .ping-note{
-  background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:12px 14px;
-  border-left:4px solid var(--green)
+  background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;
+  border-left:4px solid var(--green);transition:border-color var(--dur-fast) ease,box-shadow var(--dur-med) var(--ease-out),transform var(--dur-med) var(--ease-out)
 }
+@media (hover:hover){.ping-note:hover{box-shadow:0 8px 24px rgba(0,0,0,0.35);transform:translateY(-2px)}}
 .ping-note.ping-fresh{animation:ping-pop .5s ease-out;box-shadow:0 0 28px rgba(57,255,20,0.1)}
 .ping-accent-0{border-left-color:var(--green)}
 .ping-accent-1{border-left-color:var(--amber)}
@@ -229,9 +276,21 @@ textarea.sitrep-text{min-height:120px}
   from{opacity:0;transform:translateY(8px) scale(0.97)}
   to{opacity:1;transform:translateY(0) scale(1)}
 }
+.header-tagline{font-size:14px;color:#9bc49b;font-weight:500;margin-top:6px;line-height:1.5;max-width:720px}
 .header-live-line{font-size:13px;color:#8ab88a;margin-top:8px;line-height:1.45;max-width:780px}
 .header-live-line .live-world{color:var(--amber);font-weight:600}
 .header-live-line .live-goal{color:#c8e6c8}
+.context-tip-bar{background:linear-gradient(90deg,rgba(57,255,20,0.08),rgba(0,191,255,0.06));border:1px solid var(--border2);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;gap:12px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.context-tip-bar.is-dismissed{display:none}
+.context-tip-text{flex:1;min-width:200px;font-size:14px;color:#c8e6c8;line-height:1.55}
+.context-tip-text strong{color:var(--amber);font-weight:600}
+.modal-sheet--welcome{max-width:520px}
+.welcome-body{font-size:15px;color:#b8d4b8;line-height:1.65;margin-bottom:14px}
+.welcome-body p{margin-bottom:12px}
+.welcome-list{margin:0 0 16px 18px;padding:0;color:#c8e6c8;line-height:1.65;font-size:14px}
+.welcome-list li{margin-bottom:8px}
+.welcome-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+.welcome-foot{font-size:12px;color:#5a8a5a;margin-top:14px;line-height:1.5}
 .theme-high-contrast{
   --green:#5fff5f;--green-dim:#2dcc2d;--green-muted:#228b22;--amber:#ffcc33;--blue:#66d9ff;
   --bg:#020402;--bg2:#071207;--bg3:#0c180c;--border:#2d6a2d;--border2:#3d8a3d
@@ -247,9 +306,11 @@ textarea.sitrep-text{min-height:120px}
   transition:opacity .2s,visibility .2s;display:flex;align-items:flex-start;justify-content:center;padding:max(16px, env(safe-area-inset-top)) 16px 16px;overflow-y:auto
 }
 .modal-backdrop.is-open{opacity:1;visibility:visible}
+.modal-backdrop.is-open .modal-sheet{animation:modalPop var(--dur-med) var(--ease-spring) forwards}
+@keyframes modalPop{from{opacity:0;transform:translateY(-16px) scale(0.96)}to{opacity:1;transform:translateY(0) scale(1)}}
 .modal-sheet{
-  width:100%;max-width:440px;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;
-  padding:18px 20px 22px;margin:6vh auto;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.5)
+  width:100%;max-width:440px;background:var(--bg2);border:1px solid var(--border2);border-radius:12px;
+  padding:18px 20px 22px;margin:6vh auto;max-height:85vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,0.55),0 0 0 1px rgba(57,255,20,0.08)
 }
 .modal-sheet h3{font-size:14px;color:var(--green);font-family:'Share Tech Mono',monospace;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px}
 .modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px}
@@ -334,6 +395,8 @@ textarea.sitrep-text{min-height:120px}
   .drawer-nav-btn{min-height:48px;padding:12px 14px;font-size:15px}
   .vote-controls{flex-direction:column;align-items:stretch;gap:12px}
   .vote-controls select,.vote-controls .btn{width:100%}
+  .context-tip-bar{flex-direction:column;align-items:stretch}
+  .context-tip-bar .btn{align-self:flex-start}
   .checkpoint-rail{padding-bottom:10px}
   .obj-check{width:32px;height:32px;min-width:32px;min-height:32px}
   .obj-check i{font-size:14px}
@@ -386,22 +449,25 @@ textarea.sitrep-text{min-height:120px}
 <div id="drawer-backdrop" class="drawer-backdrop" onclick="closeSideDrawer()" aria-hidden="true"></div>
 <aside id="side-drawer" class="side-drawer" aria-hidden="true" aria-label="War Room menu">
   <div class="drawer-head">
-    <span>MENU // MODULES</span>
+    <span>Menu</span>
     <button type="button" onclick="closeSideDrawer()" aria-label="Close menu">×</button>
   </div>
   <div class="drawer-scroll">
+    <div class="drawer-group-label">Help</div>
+    <button type="button" class="drawer-nav-btn" onclick="openWelcomeTour(); closeSideDrawer();">What is War Room?</button>
     <div class="drawer-group-label">Board</div>
-    <button type="button" class="drawer-nav-btn" onclick="switchTab('objectives')">🎯 Mission</button>
-    <button type="button" class="drawer-nav-btn" onclick="switchTab('signal')">📡 Signal board</button>
-    <button type="button" class="drawer-nav-btn" onclick="switchTab('roles')">👥 Operations &amp; roles</button>
-    <button type="button" class="drawer-nav-btn" onclick="switchTab('logistics')">🗺 Waypoints</button>
-    <button type="button" class="drawer-nav-btn" onclick="switchTab('requests')">📦 Supply board</button>
-    <button type="button" class="drawer-nav-btn" onclick="switchTab('modpack')">🎮 Strategy vote</button>
-    <button type="button" class="drawer-nav-btn" onclick="switchTab('admin')">🛠 Admin &amp; cloud</button>
+    <button type="button" class="drawer-nav-btn" onclick="switchTab('objectives')">Mission</button>
+    <button type="button" class="drawer-nav-btn" onclick="switchTab('signal')">Signal</button>
+    <button type="button" class="drawer-nav-btn" onclick="switchTab('roles')">Roles</button>
+    <button type="button" class="drawer-nav-btn" onclick="switchTab('logistics')">Waypoints</button>
+    <button type="button" class="drawer-nav-btn" onclick="switchTab('requests')">Supply</button>
+    <button type="button" class="drawer-nav-btn" onclick="switchTab('modpack')">Vote</button>
+    <button type="button" class="drawer-nav-btn" onclick="switchTab('admin')">Admin</button>
     <div class="drawer-group-label">Quick actions</div>
     <button type="button" class="drawer-nav-btn" onclick="toggleCheatsheet(); closeSideDrawer();">⌨ Keyboard shortcuts</button>
     <button type="button" class="drawer-nav-btn" onclick="copyOpsBriefMd(); closeSideDrawer();">📋 Copy Markdown brief</button>
     <button type="button" class="drawer-nav-btn" onclick="copySquadPing(); closeSideDrawer();">📣 Copy squad ping</button>
+    <button type="button" class="drawer-nav-btn" onclick="copyBoardDeepLink(); closeSideDrawer();">🔗 Copy board link (this tab)</button>
     <button type="button" class="drawer-nav-btn" onclick="exportPlan(); closeSideDrawer();">💾 Export board JSON</button>
     <div class="drawer-group-label">Useful links</div>
     <a class="drawer-link-out" href="https://minecraft.wiki/" target="_blank" rel="noopener noreferrer">Minecraft Wiki</a>
@@ -409,7 +475,7 @@ textarea.sitrep-text{min-height:120px}
     <a class="drawer-link-out" href="https://www.chunkbase.com/" target="_blank" rel="noopener noreferrer">Chunkbase (seed tools)</a>
     <a class="drawer-link-out" href="https://fabricmc.net/" target="_blank" rel="noopener noreferrer">Fabric</a>
     <a class="drawer-link-out" href="https://modrinth.com/" target="_blank" rel="noopener noreferrer">Modrinth</a>
-    <p class="drawer-hint">On a phone, swipe the tab bar sideways to reach every board. Links open in a new tab. Mission section headers (− / +) fold what you are not editing — saved in this browser.</p>
+    <p class="drawer-hint">New here? Tap <strong>What is War Room?</strong> Swipe the tab bar on small screens. Links open in a new tab.</p>
   </div>
 </aside>
 <div class="war-room">
@@ -419,59 +485,70 @@ textarea.sitrep-text{min-height:120px}
         <span></span><span></span><span></span>
       </button>
       <div>
-      <div class="header-logo">// WAR ROOM TACTICAL LAYER v1.8.0</div>
-      <div class="header-title">⚔ COMMAND CENTER</div>
+      <div class="header-logo">War Room · v1.14.1</div>
+      <div class="header-title">Shared session board</div>
+      <p class="header-tagline">Objectives, notes, waypoints, and a simple vote — stays on this device unless you connect cloud in Admin.</p>
       <div class="header-live-line" id="header-session-live" aria-live="polite"></div>
       </div>
     </div>
     <div class="header-status">
       <span id="cloud-pill" class="cloud-pill cloud-pill-local" title="Cloud sync status">LOCAL</span>
       <span class="divider">|</span>
+      <span class="header-session-pulse" id="header-session-pulse" title="Session start countdown" aria-live="polite"></span>
+      <span class="divider">|</span>
       <span class="header-clock" id="header-clock" title="Local time"></span>
       <span class="divider">|</span>
-      <span><span class="dot"></span> LINK UP</span>
+      <span><span class="dot"></span> Online</span>
       <span class="divider">|</span>
-      <span><span class="dot amber"></span> SESSION</span>
+      <span><span class="dot amber"></span> Board</span>
       <span class="divider">|</span>
+      <button type="button" class="btn btn-sm" onclick="openWelcomeTour()" title="What is this? Short tour">Tour</button>
       <button type="button" class="btn btn-sm" onclick="toggleCheatsheet()" title="Keyboard shortcuts (? )">?</button>
       <button type="button" class="btn btn-sm" onclick="cycleTheme()" id="btn-theme" title="Cycle theme: default · high contrast · reader">Theme</button>
-      <button type="button" class="btn btn-sm" onclick="toggleCommandMode()">COMMAND MODE</button>
+      <button type="button" class="btn btn-sm" onclick="toggleCommandMode()" title="Larger type and calmer layout for couch play">Comfort view</button>
     </div>
   </div>
 
-  <div class="tabs">
-    <div class="tab active" onclick="switchTab('objectives')">🎯 Mission</div>
-    <div class="tab" onclick="switchTab('signal')">📡 Signal</div>
-    <div class="tab" onclick="switchTab('roles')">👥 Operations</div>
-    <div class="tab" onclick="switchTab('logistics')">🗺 Waypoints</div>
-    <div class="tab" onclick="switchTab('requests')">📦 Supply Board</div>
-    <div class="tab" onclick="switchTab('modpack')">🎮 Strategy Vote</div>
-    <div class="tab" onclick="switchTab('admin')">🛠 Admin</div>
+  <div class="tabs" id="main-tab-bar" role="tablist" aria-label="Board sections">
+    <button type="button" role="tab" class="tab active" data-tab="objectives" aria-selected="true">Mission</button>
+    <button type="button" role="tab" class="tab" data-tab="signal" aria-selected="false">Signal</button>
+    <button type="button" role="tab" class="tab" data-tab="roles" aria-selected="false">Roles</button>
+    <button type="button" role="tab" class="tab" data-tab="logistics" aria-selected="false">Waypoints</button>
+    <button type="button" role="tab" class="tab" data-tab="requests" aria-selected="false">Supply</button>
+    <button type="button" role="tab" class="tab" data-tab="modpack" aria-selected="false">Vote</button>
+    <button type="button" role="tab" class="tab" data-tab="admin" aria-selected="false">Admin</button>
   </div>
 
   <div class="content">
+    <div id="context-tip-bar" class="context-tip-bar" role="region" aria-label="Getting started">
+      <div class="context-tip-text">Start from a blank board or load the Minecraft sample from Admin. Nothing leaves this browser until you turn on cloud sync.</div>
+      <button type="button" class="btn btn-sm" onclick="dismissContextTip()">Dismiss tip</button>
+    </div>
     <div class="command-strip">
       <div class="cmd-card">
-        <div class="cmd-label">Current Mission</div>
+        <div class="cmd-label">Mission</div>
         <div class="cmd-value" id="cmd-mission">Establish Base Operations</div>
       </div>
       <div class="cmd-card">
-        <div class="cmd-label">Primary Blocker</div>
+        <div class="cmd-label">Blocker</div>
         <div class="cmd-value blocker" id="cmd-blocker">Iron + Food Bottleneck</div>
       </div>
       <div class="cmd-card">
-        <div class="cmd-label">Next Milestone</div>
+        <div class="cmd-label" id="cmd-milestone-label">Next milestone</div>
         <div class="cmd-value" id="cmd-milestone">Reach Iron Age & Secure Smelter</div>
       </div>
       <div class="cmd-card">
-        <div class="cmd-label">Board Ops</div>
+        <div class="cmd-label">Board</div>
         <div class="ops-controls">
           <button class="btn btn-sm" onclick="exportPlan()">Export</button>
           <button class="btn btn-sm" onclick="document.getElementById('import-file').click()">Import</button>
           <button class="btn btn-sm btn-danger" onclick="resetBoard()">Reset</button>
           <input type="file" id="import-file" accept=".json" onchange="importPlan(event)">
         </div>
-        <div class="shortcut-hint">Shortcuts: 1-7 tabs · N objective · P signal ping · L location · R request</div>
+        <div class="ops-controls" style="margin-top:8px">
+          <button class="btn btn-sm" type="button" onclick="copyBoardDeepLink()" title="Copy URL that opens this tab">Copy board link</button>
+        </div>
+        <div class="shortcut-hint">Keys: 1–7 switch tabs · N / P / L / R jump to common fields · ? shortcuts</div>
         <div class="sync-status" id="cloud-status">Cloud: local mode only</div>
       </div>
       <div class="cmd-card user-card">
@@ -509,6 +586,12 @@ textarea.sitrep-text{min-height:120px}
               <div class="kpi-value" style="font-size:16px;padding-top:4px;color:var(--red)" id="kpi-bottleneck">Iron + Food</div>
               <div class="kpi-sub" id="kpi-bottleneck-sub">Critical shortage</div>
             </div>
+            <div class="card card-accent-purple">
+              <div class="kpi-label">Who&apos;s ready</div>
+              <div class="kpi-value" style="font-size:22px;color:var(--purple)" id="kpi-ready-count">0 / 0</div>
+              <div class="kpi-sub">Tap your name when you&apos;re set — same idea as a voice-chat ready check.</div>
+              <div id="ready-toggles-wrap" class="ready-toggles" aria-label="Toggle ready per operator"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -543,6 +626,11 @@ textarea.sitrep-text{min-height:120px}
                 <option value="end">End</option>
                 <option value="na">N / A (other games)</option>
               </select>
+            </div>
+            <div class="full" style="grid-column:1/-1">
+              <div class="form-label">Session start (optional)</div>
+              <input type="datetime-local" id="meta-session-start" aria-label="Session start time for countdown">
+              <p class="session-meta-hint" style="margin-top:6px;margin-bottom:0">Optional: shows a countdown in the header until this time, then &quot;live&quot; for a few hours after.</p>
             </div>
           </div>
           <button type="button" class="btn btn-sm" onclick="saveSessionMeta()">Save session info</button>
@@ -582,7 +670,7 @@ textarea.sitrep-text{min-height:120px}
       <div class="card collapsible-card checkpoint-card" data-mission-section="checkpoints">
         <button type="button" class="collapse-toggle" onclick="toggleMissionSection('checkpoints')" aria-expanded="true" title="Collapse or expand">
           <span class="collapse-glyph" aria-hidden="true">−</span>
-          <span class="section-header collapse-title"><i class="ti ti-flag"></i> Battle rhythm checkpoints</span>
+          <span class="section-header collapse-title"><i class="ti ti-flag"></i> Checkpoints</span>
         </button>
         <div class="collapse-panel">
           <p class="checkpoint-lead">Session phases (first night, iron, nether, boss, mod chapter…). Check them off as you go — synced for the whole group.</p>
@@ -634,7 +722,7 @@ textarea.sitrep-text{min-height:120px}
 
     <!-- SIGNAL BOARD -->
     <div id="panel-signal" class="panel">
-      <div class="section-header"><i class="ti ti-antenna-bars-5"></i> Signal board — squad pings</div>
+      <div class="section-header"><i class="ti ti-antenna-bars-5"></i> Notes &amp; pings</div>
       <p class="ping-board-lead">A <strong>shared wall</strong> for quick, signed blurbs. <strong>Reply</strong> threads a quote above your ping. Filter when the wall gets long. <strong>Sign pings as</strong> sets a callsign on <em>this device only</em> (still the same operator id for permissions). <strong>P</strong> jumps here from anywhere outside a field.</p>
       <div class="card ping-board-card">
         <div class="ping-compose">
@@ -686,13 +774,13 @@ textarea.sitrep-text{min-height:120px}
 
     <!-- ROLES -->
     <div id="panel-roles" class="panel">
-      <div class="section-header"><i class="ti ti-users"></i> Squad Role Assignments</div>
+      <div class="section-header"><i class="ti ti-users"></i> Roles</div>
       <div id="roles-list"></div>
     </div>
 
     <!-- LOGISTICS -->
     <div id="panel-logistics" class="panel">
-      <div class="section-header"><i class="ti ti-map-pin"></i> Tactical Waypoints</div>
+      <div class="section-header"><i class="ti ti-map-pin"></i> Waypoints</div>
       <div class="card tbl-wrap" style="margin-bottom:12px;padding:0">
         <table>
           <thead><tr><th>Location</th><th>Category</th><th>Layer</th><th>Coords (X / Y / Z)</th><th>Risk</th><th>Owner</th><th>Updated</th><th></th></tr></thead>
@@ -728,7 +816,7 @@ textarea.sitrep-text{min-height:120px}
 
     <!-- REQUESTS -->
     <div id="panel-requests" class="panel">
-      <div class="section-header"><i class="ti ti-arrow-left-right"></i> Supply Exchange</div>
+      <div class="section-header"><i class="ti ti-arrow-left-right"></i> Supply &amp; trades</div>
       <div id="requests-list"></div>
       <div class="section-header" style="margin-top:12px"><i class="ti ti-plus"></i> Post a Request</div>
       <div class="add-form">
@@ -749,7 +837,7 @@ textarea.sitrep-text{min-height:120px}
 
     <!-- MODPACK VOTE -->
     <div id="panel-modpack" class="panel">
-      <div class="section-header"><i class="ti ti-trophy"></i> Modpack Evaluation Matrix</div>
+      <div class="section-header"><i class="ti ti-trophy"></i> Modpacks</div>
       <div id="modpacks-list"></div>
 
       <!-- Add new modpack form -->
@@ -778,7 +866,7 @@ textarea.sitrep-text{min-height:120px}
       </div>
 
       <div class="vote-section">
-        <div class="section-header" style="margin-bottom:12px"><i class="ti ti-chart-bar"></i> Squad Vote</div>
+        <div class="section-header" style="margin-bottom:12px"><i class="ti ti-chart-bar"></i> Vote</div>
         <div id="vote-results"></div>
         <div class="vote-controls">
           <select id="vote-select"><option value="">-- Cast your vote --</option></select>
@@ -789,7 +877,7 @@ textarea.sitrep-text{min-height:120px}
 
     <!-- ADMIN -->
     <div id="panel-admin" class="panel">
-      <div class="section-header"><i class="ti ti-settings"></i> Admin & Cloud Setup</div>
+      <div class="section-header"><i class="ti ti-settings"></i> Admin &amp; cloud</div>
       <div class="admin-grid">
         <div class="admin-card">
           <div class="form-label">Supabase URL</div>
@@ -809,13 +897,19 @@ textarea.sitrep-text{min-height:120px}
           <div class="perm-note">Only share Workspace ID + Access Key with trusted squad members.</div>
         </div>
         <div class="admin-card">
-          <div class="form-label">Diagnostics</div>
+          <div class="form-label">Board template</div>
+          <p class="perm-note" style="margin:0 0 10px"><strong>Blank</strong> or <strong>Minecraft demo</strong> — applying replaces this browser’s board. <strong>Reset</strong> reloads the current template.</p>
+          <select id="board-template-select" class="board-template-select" aria-label="Board template"></select>
+          <div class="ops-controls" style="margin-top:10px">
+            <button type="button" class="btn btn-sm" onclick="applySelectedBoardTemplate()">Apply selected template</button>
+          </div>
+          <div class="form-label" style="margin-top:14px">Diagnostics</div>
           <div id="admin-diagnostics" class="diag-box">Status: waiting for test...</div>
         </div>
       </div>
     </div>
 
-    <div class="site-footer">War Room v1.8.0 · Session context · waypoints · objectives · Commander sets the beat</div>
+    <div class="site-footer">War Room v1.14.1 · Co-op planning in one page · <button type="button" class="btn btn-sm" style="margin-top:8px" onclick="openWelcomeTour()">Quick tour</button></div>
   </div>
 </div>
 
@@ -833,6 +927,34 @@ textarea.sitrep-text{min-height:120px}
     <div class="cheatsheet-row"><span>Supply · focus request</span><span class="cheatsheet-k">R</span></div>
     <div class="cheatsheet-row"><span>Close menus</span><span class="cheatsheet-k">Esc</span></div>
     <div class="cheatsheet-row"><span>Transmit ping (Signal tab)</span><span class="cheatsheet-k">Ctrl+Enter</span></div>
+    <div class="cheatsheet-row"><span>Open a tab from a link</span><span class="cheatsheet-k">#mission #signal …</span></div>
+  </div>
+</div>
+
+<div id="welcome-modal" class="modal-backdrop" onclick="welcomeBackdropClick(event)" aria-hidden="true">
+  <div class="modal-sheet modal-sheet--welcome" role="dialog" aria-labelledby="welcome-title" aria-modal="true" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <h3 id="welcome-title">Welcome to War Room</h3>
+      <button type="button" class="modal-close" onclick="hideWelcomeModal()" aria-label="Close">×</button>
+    </div>
+    <div class="welcome-body">
+      <p><strong>War Room</strong> is a single-page board for co-op sessions: goals, quick notes, coordinates, and a light trade list. It complements voice chat — it does not replace your launcher or Discord.</p>
+      <ul class="welcome-list">
+        <li><strong>Mission</strong> — session details, objectives, checkpoints, and scratch notes.</li>
+        <li><strong>Signal</strong> — short messages that stay on the board (intel, ETA, jokes).</li>
+        <li><strong>Roles</strong> — who is doing what this session.</li>
+        <li><strong>Waypoints</strong> — shared locations (e.g. coordinates).</li>
+        <li><strong>Supply</strong> — simple need / offer list.</li>
+        <li><strong>Vote</strong> — optional group pick (e.g. modpack).</li>
+        <li><strong>Admin</strong> — export/import and optional cloud sync between PCs.</li>
+      </ul>
+      <p style="margin-bottom:0">Pick yourself under <strong>Active operator</strong>, add a few objectives, then skim the tabs. Press <strong class="cheatsheet-k">?</strong> for keyboard shortcuts.</p>
+    </div>
+    <div class="welcome-actions">
+      <button type="button" class="btn btn-sm" onclick="dismissWelcomeForever()">Got it — don&apos;t show this again</button>
+      <button type="button" class="btn btn-sm" onclick="hideWelcomeModal()">Close</button>
+    </div>
+    <p class="welcome-foot">Reopen anytime from the <strong>☰ menu</strong> or the <strong>Tour</strong> button in the header.</p>
   </div>
 </div>
 
@@ -842,78 +964,149 @@ const REMOTE_CONFIG_KEY='war_room_remote_cfg_v1';
 const MISSION_COLLAPSE_KEY='war_room_mission_collapse_v1';
 const CALLSIGN_KEY='war_room_callsign_v1';
 const THEME_KEY='war_room_theme_v1';
-const defaults={
-  commandMode:false,
-  currentUserId:'u_cmd',
-  users:[
-    {id:'u_cmd',name:'Squad Lead',role:'Commander',permissions:{objective:{add:true,edit:true,remove:true,toggle:true}}},
-    {id:'u_ops',name:'Ops Specialist',role:'Editor',permissions:{objective:{add:true,edit:true,remove:false,toggle:true}}},
-    {id:'u_view',name:'Observer',role:'Viewer',permissions:{objective:{add:false,edit:false,remove:false,toggle:false}}}
-  ],
-  command:{
-    mission:'Establish Base Operations',
-    blocker:'Iron + Food Bottleneck',
-    milestone:'Reach Iron Age & Secure Smelter',
-    sessionGoal:'Establish Base',
-    sessionGoalSub:'Build permanent HQ',
-    bottleneckLabel:'Iron + Food',
-    bottleneckSub:'Critical shortage'
+const WELCOME_DISMISSED_KEY='war_room_welcome_dismissed_v1';
+const CONTEXT_TIP_DISMISSED_KEY='war_room_context_tip_dismissed_v1';
+const BOARD_TEMPLATES={
+  blank:{
+    boardTemplate:'blank',
+    commandMode:false,
+    currentUserId:'u_cmd',
+    users:[
+      {id:'u_cmd',name:'Squad Lead',role:'Host',permissions:{objective:{add:true,edit:true,remove:true,toggle:true}}},
+      {id:'u_ops',name:'Teammate',role:'Member',permissions:{objective:{add:true,edit:true,remove:true,toggle:true}}},
+      {id:'u_view',name:'Guest',role:'Member',permissions:{objective:{add:true,edit:true,remove:true,toggle:true}}}
+    ],
+    command:{
+      mission:'',
+      blocker:'',
+      milestone:'',
+      sessionGoal:'',
+      sessionGoalSub:'',
+      bottleneckLabel:'',
+      bottleneckSub:''
+    },
+    sessionMeta:{
+      worldLabel:'',
+      gamePreset:'other',
+      platform:'other',
+      packOrMods:'',
+      defaultDimension:'na',
+      sessionStartAt:null
+    },
+    objectives:[],
+    roles:[],
+    locations:[],
+    requests:[],
+    modpacks:[],
+    votes:{},
+    checkpoints:[],
+    sitrep:'',
+    squadNotes:[],
+    operatorPresence:{}
   },
-  sessionMeta:{
-    worldLabel:'',
-    gamePreset:'minecraft',
-    platform:'java',
-    packOrMods:'',
-    defaultDimension:'overworld'
-  },
-  objectives:[
-    {text:'Find a safe base location (flat terrain, near trees + water)',priority:'crit',owner:'Pathfinder',status:'active',done:false,updatedAt:Date.now(),blockedReason:'',blockedLinksTo:null},
-    {text:'Build starter shelter before first night',priority:'crit',owner:'Foreman',status:'active',done:false,updatedAt:Date.now(),blockedReason:'',blockedLinksTo:null},
-    {text:'Set up communal chest storage system',priority:'high',owner:'Quartermaster',status:'active',done:false,updatedAt:Date.now(),blockedReason:'',blockedLinksTo:null},
-    {text:'Locate iron ore vein — minimum 64 blocks',priority:'high',owner:'Pathfinder',status:'blocked',done:false,updatedAt:Date.now(),blockedReason:'Need pickaxe + torches for safe branch mine',blockedLinksTo:null},
-    {text:'Establish farm (wheat + carrots minimum)',priority:'high',owner:'Steward',status:'active',done:false,updatedAt:Date.now(),blockedReason:'',blockedLinksTo:null},
-    {text:'Scout nearby biomes and log coordinates',priority:'med',owner:'Pathfinder',status:'active',done:false,updatedAt:Date.now(),blockedReason:'',blockedLinksTo:null},
-    {text:'Build Nether portal (post iron age)',priority:'med',owner:'Vanguard',status:'idle',done:false,updatedAt:Date.now(),blockedReason:'',blockedLinksTo:null}
-  ],
-  roles:[
-    {icon:'🏗',name:'The Foreman',player:'Unassigned',task:'Base layout, building standards, room planning.',status:'idle'},
-    {icon:'⚒',name:'The Quartermaster',player:'Unassigned',task:'Storage, labeling, and item routing.',status:'idle'},
-    {icon:'🧭',name:'The Pathfinder',player:'Unassigned',task:'Exploration and coordinate intelligence.',status:'idle'},
-    {icon:'⚔',name:'The Vanguard',player:'Unassigned',task:'Combat, gear progression, and encounter lead.',status:'idle'},
-    {icon:'🔮',name:'The Arcanist',player:'Unassigned',task:'Magic and tech unlock progression.',status:'idle'},
-    {icon:'🌾',name:'The Steward',player:'Unassigned',task:'Food, farming, and passive mob systems.',status:'idle'}
-  ],
-  locations:[
-    {name:'Main Base',category:'BASE',dimension:'overworld',x:'?',y:'64',z:'?',risk:'med',owner:'Foreman',updatedAt:Date.now()},
-    {name:'Spawn Point',category:'SPAWN',dimension:'overworld',x:'0',y:'64',z:'0',risk:'low',owner:'Pathfinder',updatedAt:Date.now()}
-  ],
-  requests:[
-    {need:'64x Logs (any type)',offer:'Cooked food x32',who:'Pathfinder',urgency:'med',status:'open',updatedAt:Date.now()},
-    {need:'Iron Pickaxe',offer:'Scouting report',who:'Foreman',urgency:'high',status:'open',updatedAt:Date.now()}
-  ],
-  modpacks:[
-    {id:'vh',name:'Vault Hunters 3rd Edition',tag:'Pure RPG Progression',rec:true,complexity:80,rpg:95,coop:85,desc:'Built around a dungeon loop — run Vaults together, collect loot, and level a massive skill tree.'},
-    {id:'bmc',name:'Better MC (BMC4)',tag:'Exploration & Adventure',rec:false,complexity:45,rpg:70,coop:75,desc:'Classic Minecraft feel with bosses, biomes, and quests for lower automation friction.'},
-    {id:'e9',name:'Enigmatica 9',tag:'Cooperative Building',rec:false,complexity:90,rpg:60,coop:90,desc:'High-tech + magic collaboration with strong role specialization.'}
-  ],
-  votes:{vh:0,bmc:0,e9:0},
-  checkpoints:[
-    {id:'cp_seeded_1',title:'Stabilize — food & shelter',targetNote:'Opening window',done:false},
-    {id:'cp_seeded_2',title:'Tooling runway (iron baseline)',targetNote:'Before day 2',done:false},
-    {id:'cp_seeded_3',title:'Squad sync / first win',targetNote:'Commander sets beat',done:false}
-  ],
-  sitrep:'',
-  squadNotes:[],
-  operatorPresence:{}
+  minecraft:{
+    boardTemplate:'minecraft',
+    commandMode:false,
+    currentUserId:'u_cmd',
+    users:[
+      {id:'u_cmd',name:'Squad Lead',role:'Commander',permissions:{objective:{add:true,edit:true,remove:true,toggle:true}}},
+      {id:'u_ops',name:'Ops Specialist',role:'Editor',permissions:{objective:{add:true,edit:true,remove:false,toggle:true}}},
+      {id:'u_view',name:'Observer',role:'Viewer',permissions:{objective:{add:false,edit:false,remove:false,toggle:false}}}
+    ],
+    command:{
+      mission:'Establish Base Operations',
+      blocker:'Iron + Food Bottleneck',
+      milestone:'Reach Iron Age & Secure Smelter',
+      sessionGoal:'Establish Base',
+      sessionGoalSub:'Build permanent HQ',
+      bottleneckLabel:'Iron + Food',
+      bottleneckSub:'Critical shortage'
+    },
+    sessionMeta:{
+      worldLabel:'',
+      gamePreset:'minecraft',
+      platform:'java',
+      packOrMods:'',
+      defaultDimension:'overworld',
+      sessionStartAt:null
+    },
+    objectives:[
+      {text:'Find a safe base location (flat terrain, near trees + water)',priority:'crit',owner:'Pathfinder',status:'active',done:false,updatedAt:Date.now(),blockedReason:'',blockedLinksTo:null},
+      {text:'Build starter shelter before first night',priority:'crit',owner:'Foreman',status:'active',done:false,updatedAt:Date.now(),blockedReason:'',blockedLinksTo:null},
+      {text:'Set up communal chest storage system',priority:'high',owner:'Quartermaster',status:'active',done:false,updatedAt:Date.now(),blockedReason:'',blockedLinksTo:null},
+      {text:'Locate iron ore vein — minimum 64 blocks',priority:'high',owner:'Pathfinder',status:'blocked',done:false,updatedAt:Date.now(),blockedReason:'Need pickaxe + torches for safe branch mine',blockedLinksTo:null},
+      {text:'Establish farm (wheat + carrots minimum)',priority:'high',owner:'Steward',status:'active',done:false,updatedAt:Date.now(),blockedReason:'',blockedLinksTo:null},
+      {text:'Scout nearby biomes and log coordinates',priority:'med',owner:'Pathfinder',status:'active',done:false,updatedAt:Date.now(),blockedReason:'',blockedLinksTo:null},
+      {text:'Build Nether portal (post iron age)',priority:'med',owner:'Vanguard',status:'idle',done:false,updatedAt:Date.now(),blockedReason:'',blockedLinksTo:null}
+    ],
+    roles:[
+      {icon:'🏗',name:'The Foreman',player:'Unassigned',task:'Base layout, building standards, room planning.',status:'idle'},
+      {icon:'⚒',name:'The Quartermaster',player:'Unassigned',task:'Storage, labeling, and item routing.',status:'idle'},
+      {icon:'🧭',name:'The Pathfinder',player:'Unassigned',task:'Exploration and coordinate intelligence.',status:'idle'},
+      {icon:'⚔',name:'The Vanguard',player:'Unassigned',task:'Combat, gear progression, and encounter lead.',status:'idle'},
+      {icon:'🔮',name:'The Arcanist',player:'Unassigned',task:'Magic and tech unlock progression.',status:'idle'},
+      {icon:'🌾',name:'The Steward',player:'Unassigned',task:'Food, farming, and passive mob systems.',status:'idle'}
+    ],
+    locations:[
+      {name:'Main Base',category:'BASE',dimension:'overworld',x:'?',y:'64',z:'?',risk:'med',owner:'Foreman',updatedAt:Date.now()},
+      {name:'Spawn Point',category:'SPAWN',dimension:'overworld',x:'0',y:'64',z:'0',risk:'low',owner:'Pathfinder',updatedAt:Date.now()}
+    ],
+    requests:[
+      {need:'64x Logs (any type)',offer:'Cooked food x32',who:'Pathfinder',urgency:'med',status:'open',updatedAt:Date.now()},
+      {need:'Iron Pickaxe',offer:'Scouting report',who:'Foreman',urgency:'high',status:'open',updatedAt:Date.now()}
+    ],
+    modpacks:[
+      {id:'vh',name:'Vault Hunters 3rd Edition',tag:'Pure RPG Progression',rec:true,complexity:80,rpg:95,coop:85,desc:'Built around a dungeon loop — run Vaults together, collect loot, and level a massive skill tree.'},
+      {id:'bmc',name:'Better MC (BMC4)',tag:'Exploration & Adventure',rec:false,complexity:45,rpg:70,coop:75,desc:'Classic Minecraft feel with bosses, biomes, and quests for lower automation friction.'},
+      {id:'e9',name:'Enigmatica 9',tag:'Cooperative Building',rec:false,complexity:90,rpg:60,coop:90,desc:'High-tech + magic collaboration with strong role specialization.'}
+    ],
+    votes:{vh:0,bmc:0,e9:0},
+    checkpoints:[
+      {id:'cp_seeded_1',title:'Stabilize — food & shelter',targetNote:'Opening window',done:false},
+      {id:'cp_seeded_2',title:'Tooling runway (iron baseline)',targetNote:'Before day 2',done:false},
+      {id:'cp_seeded_3',title:'Squad sync / first win',targetNote:'Align on voice',done:false}
+    ],
+    sitrep:'',
+    squadNotes:[],
+    operatorPresence:{}
+  }
 };
+
+const BOARD_TEMPLATE_KEYS=['blank','minecraft'];
+
+function resolveBoardTemplate(parsed){
+  const bt=parsed&&parsed.boardTemplate;
+  if(bt==='blank'||bt==='minecraft')return bt;
+  if(['study','raid','trip'].includes(bt))return 'blank';
+  return 'minecraft';
+}
+
+function templateKeyFromState(){
+  const k=state&&state.boardTemplate;
+  return BOARD_TEMPLATE_KEYS.includes(k)?k:'minecraft';
+}
+
+function boardTemplateLabel(key){
+  return key==='minecraft'?'Minecraft co-op demo':'Blank board (empty)';
+}
+
+function firstRunNormalizedState(){
+  return normalizeState(structuredClone(BOARD_TEMPLATES.blank));
+}
+
+const MAX_SQUAD_NOTES=120;
+const MAX_SQUAD_NOTE_CHARS=480;
+const PING_REACTION_EMOJIS=['👍','👀','✅','🔥'];
+const TAB_ORDER=['objectives','signal','roles','logistics','requests','modpack','admin'];
+const TAB_HASH_SLUG={objectives:'mission',signal:'signal',roles:'roles',logistics:'waypoints',requests:'supply',modpack:'strategy',admin:'admin'};
+const SLUG_TO_TAB_ID=Object.fromEntries(Object.entries(TAB_HASH_SLUG).map(([tab,slug])=>[slug,tab]));
+let currentTabId='objectives';
 
 let state=loadState();
 let flashPingId=null;
 let applyingRemoteBoardMerge=false;
 let lastLocalEditMs=0;
 let replyDraft=null;
-const MAX_SQUAD_NOTES=120;
-const MAX_SQUAD_NOTE_CHARS=480;
 let remote={
   url:'',
   anonKey:'',
@@ -930,16 +1123,57 @@ let remote={
 function loadState(){
   try{
     const raw=localStorage.getItem(STORAGE_KEY);
-    if(!raw)return structuredClone(defaults);
+    if(!raw)return firstRunNormalizedState();
     const parsed=JSON.parse(raw);
-    if(!parsed || typeof parsed!=='object')return structuredClone(defaults);
+    if(!parsed || typeof parsed!=='object')return firstRunNormalizedState();
     return normalizeState(parsed);
   }catch(_){
-    return structuredClone(defaults);
+    return firstRunNormalizedState();
   }
 }
 
+function sanitizePingReactions(r){
+  const out={};
+  if(!r||typeof r!=='object')return out;
+  PING_REACTION_EMOJIS.forEach(em=>{
+    if(Array.isArray(r[em])){
+      const ids=[...new Set(r[em].filter(x=>typeof x==='string'&&x.length&&x.length<48))].slice(0,32);
+      if(ids.length)out[em]=ids;
+    }
+  });
+  return out;
+}
+function sanitizeSessionReady(raw,userIds){
+  const o={};
+  const allow=new Set((userIds||[]).filter(Boolean));
+  if(raw&&typeof raw==='object'){
+    Object.keys(raw).forEach(k=>{
+      if(allow.has(k))o[k]=!!raw[k];
+    });
+  }
+  return o;
+}
+function joinHashActive(){
+  try{
+    const h=(window.location.hash||'').replace(/^#/,'');
+    if(!h)return false;
+    const p=new URLSearchParams(h);
+    if(p.get('join')!=='1')return false;
+    return !!(p.get('ws')&&p.get('ak'));
+  }catch(_){return false;}
+}
+function tabSlugForPanelId(tab){
+  return TAB_HASH_SLUG[tab]||'mission';
+}
+function tabIdFromHashFragment(frag){
+  const f=(frag||'').split('&')[0].toLowerCase();
+  if(SLUG_TO_TAB_ID[f])return SLUG_TO_TAB_ID[f];
+  if(f==='objectives')return 'objectives';
+  return '';
+}
 function normalizeState(parsed){
+  const tpl=resolveBoardTemplate(parsed);
+  const base=BOARD_TEMPLATES[tpl]||BOARD_TEMPLATES.blank;
   const safeUsers=Array.isArray(parsed.users) && parsed.users.length
     ? parsed.users.map((u,i)=>({
         id:typeof u.id==='string' && u.id ? u.id : `u_${i}`,
@@ -954,7 +1188,7 @@ function normalizeState(parsed){
           }
         }
       }))
-    : structuredClone(defaults.users);
+    : structuredClone(base.users);
 
   const safeCheckpoints=Array.isArray(parsed.checkpoints)
     ? parsed.checkpoints.map((c,i)=>({
@@ -963,15 +1197,16 @@ function normalizeState(parsed){
         targetNote:typeof c.targetNote==='string'?c.targetNote:'',
         done:!!c.done
       }))
-    : structuredClone(defaults.checkpoints);
+    : structuredClone(base.checkpoints);
 
   const sm=parsed.sessionMeta||{};
   const safeSessionMeta={
-    worldLabel:typeof sm.worldLabel==='string'?sm.worldLabel:defaults.sessionMeta.worldLabel,
-    gamePreset:['minecraft','other'].includes(sm.gamePreset)?sm.gamePreset:defaults.sessionMeta.gamePreset,
-    platform:['java','bedrock','other'].includes(sm.platform)?sm.platform:defaults.sessionMeta.platform,
-    packOrMods:typeof sm.packOrMods==='string'?sm.packOrMods:defaults.sessionMeta.packOrMods,
-    defaultDimension:['overworld','nether','end','na'].includes(sm.defaultDimension)?sm.defaultDimension:defaults.sessionMeta.defaultDimension
+    worldLabel:typeof sm.worldLabel==='string'?sm.worldLabel:base.sessionMeta.worldLabel,
+    gamePreset:['minecraft','other'].includes(sm.gamePreset)?sm.gamePreset:base.sessionMeta.gamePreset,
+    platform:['java','bedrock','other'].includes(sm.platform)?sm.platform:base.sessionMeta.platform,
+    packOrMods:typeof sm.packOrMods==='string'?sm.packOrMods:base.sessionMeta.packOrMods,
+    defaultDimension:['overworld','nether','end','na'].includes(sm.defaultDimension)?sm.defaultDimension:base.sessionMeta.defaultDimension,
+    sessionStartAt:(typeof sm.sessionStartAt==='number'&&!Number.isNaN(sm.sessionStartAt)&&sm.sessionStartAt>946684800000&&sm.sessionStartAt<4102444800000)?Math.floor(sm.sessionStartAt):null
   };
 
   const safeLocations=Array.isArray(parsed.locations)&&parsed.locations.length
@@ -986,11 +1221,12 @@ function normalizeState(parsed){
         owner:typeof l.owner==='string'&&l.owner?l.owner:'Unassigned',
         updatedAt:typeof l.updatedAt==='number'?l.updatedAt:Date.now()
       }))
-    : structuredClone(defaults.locations);
+    : structuredClone(base.locations);
 
   const rawObj=Array.isArray(parsed.objectives)?parsed.objectives:null;
   const safeObjectives=rawObj
     ? rawObj.map((o,i)=>({
+        id:(typeof o.id==='string'&&o.id)?o.id.slice(0,64):'',
         text:typeof o.text==='string'&&o.text?o.text:'Objective '+(i+1),
         priority:['crit','high','med'].includes(o.priority)?o.priority:'med',
         owner:typeof o.owner==='string'&&o.owner?o.owner:'Unassigned',
@@ -1000,8 +1236,16 @@ function normalizeState(parsed){
         blockedReason:typeof o.blockedReason==='string'?o.blockedReason.slice(0,220):'',
         blockedLinksTo:typeof o.blockedLinksTo==='number'&&o.blockedLinksTo>=0?o.blockedLinksTo:null
       }))
-    : structuredClone(defaults.objectives);
+    : structuredClone(base.objectives).map(o=>({...o}));
+  const seenObjIds=new Set();
   safeObjectives.forEach((o,i)=>{
+    let id=(o.id||'').trim();
+    if(!id||seenObjIds.has(id)){
+      id='obj_'+Date.now()+'_'+i+'_'+Math.random().toString(36).slice(2,9);
+      while(seenObjIds.has(id))id='obj_'+Date.now()+'_'+Math.random().toString(36).slice(2,9);
+    }
+    o.id=id;
+    seenObjIds.add(o.id);
     if(o.blockedLinksTo!=null&&(o.blockedLinksTo>=safeObjectives.length||o.blockedLinksTo===i))o.blockedLinksTo=null;
   });
 
@@ -1023,29 +1267,87 @@ function normalizeState(parsed){
       createdAt:typeof n.createdAt==='number'?n.createdAt:Date.now(),
       replyToId:typeof n.replyToId==='string'?n.replyToId:'',
       replyUser:typeof n.replyUser==='string'?n.replyUser.slice(0,80):'',
-      replyExcerpt:typeof n.replyExcerpt==='string'?n.replyExcerpt.slice(0,120):''
+      replyExcerpt:typeof n.replyExcerpt==='string'?n.replyExcerpt.slice(0,120):'',
+      reactions:sanitizePingReactions(n.reactions)
     }))
     .filter(n=>n.text.trim())
     .sort((a,b)=>b.createdAt-a.createdAt)
     .slice(0,MAX_SQUAD_NOTES);
 
+  const rawRoles=Array.isArray(parsed.roles)?parsed.roles:null;
+  const roleBase=rawRoles&&rawRoles.length?rawRoles:structuredClone(base.roles);
+  const safeRoles=roleBase.map((r,i)=>({
+    icon:typeof r.icon==='string'&&r.icon?r.icon.slice(0,12):'?',
+    name:typeof r.name==='string'&&r.name?r.name.slice(0,120):'Role '+(i+1),
+    player:typeof r.player==='string'?r.player.slice(0,120):'Unassigned',
+    task:typeof r.task==='string'?r.task.slice(0,500):'',
+    status:['active','idle','offline'].includes(r.status)?r.status:'idle'
+  }));
+
+  const rawReq=Array.isArray(parsed.requests)?parsed.requests:null;
+  const reqBase=rawReq!==null?rawReq:structuredClone(base.requests);
+  const safeRequests=reqBase.map(r=>({
+    need:typeof r.need==='string'?r.need.slice(0,400):'',
+    offer:typeof r.offer==='string'?r.offer.slice(0,400):'Nothing yet',
+    who:typeof r.who==='string'?r.who.slice(0,120):'Unassigned',
+    urgency:(u=>['med','high','crit'].includes(u)?u:'med')(String(r.urgency||'med').toLowerCase()),
+    status:(s=>['open','fulfilled'].includes(s)?s:'open')(String(r.status||'open').toLowerCase()),
+    updatedAt:typeof r.updatedAt==='number'?r.updatedAt:Date.now()
+  })).filter(r=>r.need.trim());
+
+  const rawMp=Array.isArray(parsed.modpacks)?parsed.modpacks:null;
+  const mpBase=rawMp!==null?rawMp:structuredClone(base.modpacks);
+  const safeModpacks=mpBase.map((m,i)=>({
+    id:typeof m.id==='string'&&m.id?m.id.slice(0,64):'mp_'+i+'_'+Date.now(),
+    name:typeof m.name==='string'&&m.name?m.name.slice(0,120):'Pack',
+    tag:typeof m.tag==='string'?m.tag.slice(0,120):'Pack',
+    rec:false,
+    complexity:clamp(m.complexity),
+    rpg:clamp(m.rpg),
+    coop:clamp(m.coop),
+    desc:typeof m.desc==='string'?m.desc.slice(0,2000):''
+  }));
+  safeModpacks.forEach(m=>{m.rec=false;});
+  const pickRec=mpBase.findIndex(m=>!!m.rec);
+  const recAt=pickRec>=0?pickRec:0;
+  if(safeModpacks[recAt])safeModpacks[recAt].rec=true;
+
+  const mpIds=new Set(safeModpacks.map(m=>m.id));
+  const mergedVotes=(parsed.votes&&typeof parsed.votes==='object')?parsed.votes:{};
+  const safeVotes={};
+  mpIds.forEach(id=>{
+    const n=mergedVotes[id];
+    safeVotes[id]=typeof n==='number'&&n>=0&&!Number.isNaN(n)?Math.min(1e6,Math.floor(n)):0;
+  });
+
+  const uidOk=safeUsers.some(u=>u.id===parsed.currentUserId);
+
+  let pinnedId=typeof parsed.pinnedObjectiveId==='string'?parsed.pinnedObjectiveId.trim().slice(0,64):'';
+  if(!pinnedId||!safeObjectives.some(o=>o.id===pinnedId))pinnedId=null;
+
   return {
-    ...structuredClone(defaults),
+    ...structuredClone(base),
     ...parsed,
-    command:{...defaults.command,...(parsed.command||{})},
-    votes:{...defaults.votes,...(parsed.votes||{})},
+    command:{...base.command,...(parsed.command||{})},
+    votes:safeVotes,
     users:safeUsers,
+    roles:safeRoles,
+    requests:safeRequests,
+    modpacks:safeModpacks,
     objectives:safeObjectives,
     checkpoints:safeCheckpoints,
     sessionMeta:safeSessionMeta,
     locations:safeLocations,
     squadNotes:safeSquadNotes,
     operatorPresence:safePresence,
+    sessionReady:sanitizeSessionReady(parsed.sessionReady,safeUsers.map(u=>u.id)),
+    pinnedObjectiveId:pinnedId,
     sitrep:typeof parsed.sitrep==='string'?parsed.sitrep:'',
-    currentUserId:parsed.currentUserId || defaults.currentUserId,
+    currentUserId:uidOk?parsed.currentUserId:base.currentUserId,
     editingObjectiveIndex:null,
     focusBoard:false,
-    sessionStartedAt:undefined
+    sessionStartedAt:undefined,
+    boardTemplate:tpl
   };
 }
 
@@ -1066,6 +1368,17 @@ function saveState(){
 }
 function stamp(){return Date.now();}
 function timeLabel(ts){return new Date(ts||Date.now()).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});}
+function epochToDatetimeLocal(ms){
+  if(!ms)return '';
+  const d=new Date(ms);
+  const pad=n=>String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
+}
+function datetimeLocalToEpoch(v){
+  if(!v||!String(v).trim())return null;
+  const t=new Date(v).getTime();
+  return Number.isNaN(t)?null:t;
+}
 function showToast(msg,durationMs){
   const t=document.getElementById('toast');
   t.textContent=msg;
@@ -1092,7 +1405,7 @@ function dimensionLabel(d){
 function renderHeaderLive(){
   const el=document.getElementById('header-session-live');
   if(!el)return;
-  const sm=state.sessionMeta||defaults.sessionMeta;
+  const sm=state.sessionMeta||structuredClone(BOARD_TEMPLATES[templateKeyFromState()].sessionMeta);
   const w=(sm.worldLabel||'').trim();
   const g1=(state.command.sessionGoal||'').trim();
   const g2=(state.command.sessionGoalSub||'').trim();
@@ -1131,6 +1444,52 @@ function toggleCheatsheet(){
 }
 function cheatsheetBackdropClick(e){
   if(e.target===e.currentTarget)toggleCheatsheet();
+}
+
+function showWelcomeModal(){
+  const m=document.getElementById('welcome-modal');
+  if(!m)return;
+  const cs=document.getElementById('cheatsheet-modal');
+  if(cs&&cs.classList.contains('is-open'))toggleCheatsheet();
+  closeSideDrawer();
+  m.classList.add('is-open');
+  m.setAttribute('aria-hidden','false');
+  document.body.style.overflow='hidden';
+}
+function hideWelcomeModal(){
+  const m=document.getElementById('welcome-modal');
+  if(!m)return;
+  m.classList.remove('is-open');
+  m.setAttribute('aria-hidden','true');
+  document.body.style.overflow='';
+}
+function welcomeBackdropClick(e){
+  if(e.target===e.currentTarget)hideWelcomeModal();
+}
+function dismissWelcomeForever(){
+  try{localStorage.setItem(WELCOME_DISMISSED_KEY,'1');}catch(_){}
+  hideWelcomeModal();
+}
+function openWelcomeTour(){
+  showWelcomeModal();
+}
+function maybeShowWelcomeOnBoot(){
+  try{
+    if(localStorage.getItem(WELCOME_DISMISSED_KEY))return;
+  }catch(_){return;}
+  setTimeout(()=>showWelcomeModal(),450);
+}
+function applyContextTipVisibility(){
+  const bar=document.getElementById('context-tip-bar');
+  if(!bar)return;
+  try{
+    if(localStorage.getItem(CONTEXT_TIP_DISMISSED_KEY))bar.classList.add('is-dismissed');
+    else bar.classList.remove('is-dismissed');
+  }catch(_){}
+}
+function dismissContextTip(){
+  try{localStorage.setItem(CONTEXT_TIP_DISMISSED_KEY,'1');}catch(_){}
+  applyContextTipVisibility();
 }
 
 function getPingDisplayName(){
@@ -1210,19 +1569,20 @@ function renderPresenceLine(){
 }
 
 function populateSessionMeta(){
-  const m=state.sessionMeta||structuredClone(defaults.sessionMeta);
+  const m=state.sessionMeta||structuredClone(BOARD_TEMPLATES[templateKeyFromState()].sessionMeta);
   const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v;};
   set('meta-world-label',m.worldLabel||'');
   set('meta-game-preset',m.gamePreset||'minecraft');
   set('meta-platform',m.platform||'java');
   set('meta-pack-mods',m.packOrMods||'');
   set('meta-default-dimension',m.defaultDimension||'overworld');
+  set('meta-session-start',epochToDatetimeLocal(m.sessionStartAt||null));
   syncWaypointDimensionSelect();
 }
 
 function syncWaypointDimensionSelect(){
   const sel=document.getElementById('loc-dimension');
-  const m=state.sessionMeta||defaults.sessionMeta;
+  const m=state.sessionMeta||structuredClone(BOARD_TEMPLATES[templateKeyFromState()].sessionMeta);
   if(sel&&m.defaultDimension)sel.value=m.defaultDimension;
 }
 
@@ -1232,11 +1592,13 @@ function saveSessionMeta(){
     gamePreset:document.getElementById('meta-game-preset').value,
     platform:document.getElementById('meta-platform').value,
     packOrMods:document.getElementById('meta-pack-mods').value.trim(),
-    defaultDimension:document.getElementById('meta-default-dimension').value
+    defaultDimension:document.getElementById('meta-default-dimension').value,
+    sessionStartAt:datetimeLocalToEpoch(document.getElementById('meta-session-start')&&document.getElementById('meta-session-start').value)
   };
   saveState();
   syncWaypointDimensionSelect();
   renderHeaderLive();
+  renderSessionPulse();
   showToast('Session info saved');
 }
 
@@ -1282,7 +1644,7 @@ function canDeleteSquadNote(note){
   const u=getCurrentUser();
   if(!note||!u)return false;
   if(note.userId&&note.userId===u.id)return true;
-  if(u.role==='Commander')return true;
+  if(['Commander','Host','Lead'].includes(u.role))return true;
   return false;
 }
 function postSquadNote(){
@@ -1310,7 +1672,8 @@ function postSquadNote(){
     userName:getPingDisplayName(),
     kind:(kindEl&&kindEl.value)||'misc',
     createdAt:stamp(),
-    ...replyExtra
+    ...replyExtra,
+    reactions:{}
   });
   while(state.squadNotes.length>MAX_SQUAD_NOTES)state.squadNotes.pop();
   if(ta)ta.value='';
@@ -1331,7 +1694,7 @@ function postSquadNote(){
 function removeSquadNote(id){
   const note=state.squadNotes&&state.squadNotes.find(n=>n.id===id);
   if(!note)return;
-  if(!canDeleteSquadNote(note)){showToast('Only the author or Commander can drop a ping');return;}
+  if(!canDeleteSquadNote(note)){showToast('Only the author or a lead role can drop this ping');return;}
   state.squadNotes=state.squadNotes.filter(n=>n.id!==id);
   saveState();
   renderSquadNotes();
@@ -1374,7 +1737,51 @@ function renderSquadNotes(){
       </div>
       ${replyCtx}
       <div class="ping-body">${formatPingBody(n.text)}</div>
+      <div class="ping-reactions" aria-label="Quick reactions">${PING_REACTION_EMOJIS.map(em=>{
+        const arr=(n.reactions&&n.reactions[em])||[];
+        const cnt=Array.isArray(arr)?arr.length:0;
+        const cu=getCurrentUser();
+        const on=cu&&arr.includes(cu.id);
+        return `<button type="button" class="ping-react-btn${on?' on':''}" aria-pressed="${on?'true':'false'}" onclick='togglePingReaction(${JSON.stringify(n.id)},${JSON.stringify(em)})'>${em}<span class="ping-react-count">${cnt||''}</span></button>`;
+      }).join('')}</div>
     </article>`;
+  }).join('');
+}
+
+function togglePingReaction(noteId,emoji){
+  if(!PING_REACTION_EMOJIS.includes(emoji))return;
+  const n=state.squadNotes&&state.squadNotes.find(x=>x.id===noteId);
+  if(!n)return;
+  const u=getCurrentUser();
+  if(!u)return;
+  if(!n.reactions||typeof n.reactions!=='object')n.reactions={};
+  const arr=Array.isArray(n.reactions[emoji])?[...n.reactions[emoji]]:[];
+  const ix=arr.indexOf(u.id);
+  if(ix>=0)arr.splice(ix,1); else arr.push(u.id);
+  if(arr.length)n.reactions[emoji]=arr; else delete n.reactions[emoji];
+  saveState();
+  renderSquadNotes();
+}
+
+function toggleSessionReady(uid){
+  if(!uid)return;
+  if(!state.sessionReady||typeof state.sessionReady!=='object')state.sessionReady={};
+  state.sessionReady[uid]=!state.sessionReady[uid];
+  saveState();
+  renderReadyToggles();
+}
+
+function renderReadyToggles(){
+  const wrap=document.getElementById('ready-toggles-wrap');
+  const cnt=document.getElementById('kpi-ready-count');
+  if(!wrap||!cnt)return;
+  const users=state.users||[];
+  const sr=state.sessionReady&&typeof state.sessionReady==='object'?state.sessionReady:{};
+  const readyN=users.filter(u=>sr[u.id]).length;
+  cnt.textContent=readyN+' / '+users.length;
+  wrap.innerHTML=users.map(u=>{
+    const on=!!sr[u.id];
+    return `<button type="button" class="ready-chip${on?' on':''}" onclick="toggleSessionReady(${JSON.stringify(u.id)})">${escapeHtml(u.name)}${on?' ✓':''}</button>`;
   }).join('');
 }
 
@@ -1409,9 +1816,9 @@ function buildMarkdownBrief(){
   const next=state.objectives.find(o=>!o.done);
   const lines=[];
   lines.push('# War Room — ops brief');
-  lines.push('_Export from Tactical Layer — paste anywhere._');
+  lines.push('_Paste into Discord, Notes, or a wiki._');
   lines.push('');
-  const sm=state.sessionMeta||defaults.sessionMeta;
+  const sm=state.sessionMeta||structuredClone(BOARD_TEMPLATES[templateKeyFromState()].sessionMeta);
   lines.push('## Session & world');
   lines.push('- **Label:** '+(sm.worldLabel||'_Unnamed_'));
   lines.push('- **Game:** '+(sm.gamePreset==='minecraft'?'Minecraft':'Other'));
@@ -1422,10 +1829,16 @@ function buildMarkdownBrief(){
     lines.push('- **Context:** '+(sm.packOrMods||'_—_'));
   }
   lines.push('- **Default waypoint layer:** '+dimensionLabel(sm.defaultDimension));
+  if(sm.sessionStartAt)lines.push('- **Session starts (local):** '+new Date(sm.sessionStartAt).toLocaleString());
+  const users=state.users||[];
+  const sr=state.sessionReady&&typeof state.sessionReady==='object'?state.sessionReady:{};
+  const rn=users.filter(u=>sr[u.id]).length;
+  if(users.length)lines.push('- **Ready check-in:** '+rn+' / '+users.length+' operators');
   lines.push('');
-  lines.push('## Commander picture');
+  lines.push('## Summary');
   lines.push('- **Mission:** '+state.command.mission);
-  lines.push('- **Next milestone:** '+(next?next.text:state.command.milestone));
+  const pin=getPinnedObjective();
+  lines.push('- **Next milestone / focus:** '+(pin?pin.text:(next?next.text:state.command.milestone)));
   lines.push('- **Blocker:** '+(blocked?blocked.text:state.command.blocker));
   lines.push('- **Session goal:** '+state.command.sessionGoal+(state.command.sessionGoalSub?' — '+state.command.sessionGoalSub:''));
   lines.push('- **Bottleneck label:** '+state.command.bottleneckLabel+(state.command.bottleneckSub?' — '+state.command.bottleneckSub:''));
@@ -1480,7 +1893,7 @@ function copyOpsBriefMd(){
 }
 
 function copySquadPing(){
-  const sm=state.sessionMeta||defaults.sessionMeta;
+  const sm=state.sessionMeta||structuredClone(BOARD_TEMPLATES[templateKeyFromState()].sessionMeta);
   const next=state.objectives.find(o=>!o.done);
   const blocked=state.objectives.find(o=>o.status==='blocked'&&!o.done);
   const openReq=state.requests.filter(r=>r.status==='open');
@@ -1601,19 +2014,70 @@ function focusSignalBoard(){
   closeSideDrawer();
   setTimeout(()=>document.getElementById('squad-note-input')?.focus(),60);
 }
-function switchTab(t){
-  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+function switchTab(t,skipHash){
+  if(!TAB_ORDER.includes(t))return;
+  const panel=document.getElementById('panel-'+t);
+  if(!panel)return;
+  currentTabId=t;
+  const bar=document.getElementById('main-tab-bar');
+  const tabButtons=bar?bar.querySelectorAll('[data-tab]'):[];
+  tabButtons.forEach(btn=>{
+    const on=btn.getAttribute('data-tab')===t;
+    btn.classList.toggle('active',on);
+    btn.setAttribute('aria-selected',on?'true':'false');
+  });
   document.querySelectorAll('.panel').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(el=>{if(el.getAttribute('onclick').includes("'"+t+"'"))el.classList.add('active');});
-  document.getElementById('panel-'+t).classList.add('active');
+  panel.classList.add('active');
+  if(t==='admin')populateBoardTemplateSelect();
   closeSideDrawer();
+  if(!skipHash&&!joinHashActive()){
+    const slug=tabSlugForPanelId(t);
+    try{
+      history.replaceState(null,'',location.pathname+location.search+'#'+slug);
+    }catch(_){
+      location.hash='#'+slug;
+    }
+  }
+}
+
+function installTabBar(){
+  const bar=document.getElementById('main-tab-bar');
+  if(!bar||bar.dataset.bound==='1')return;
+  bar.dataset.bound='1';
+  bar.addEventListener('click',e=>{
+    const btn=e.target&&e.target.closest&&e.target.closest('[data-tab]');
+    if(!btn||!bar.contains(btn))return;
+    const id=btn.getAttribute('data-tab');
+    if(id)switchTab(id);
+  });
+}
+
+function applyTabFromHash(){
+  if(joinHashActive())return;
+  const raw=(location.hash||'').replace(/^#/,'');
+  if(!raw)return;
+  const tab=tabIdFromHashFragment(raw);
+  if(tab&&TAB_ORDER.includes(tab))switchTab(tab,true);
+}
+
+function copyBoardDeepLink(){
+  const slug=tabSlugForPanelId(currentTabId);
+  let url;
+  try{
+    url=new URL(location.href);
+    url.hash='#'+slug;
+  }catch(_){
+    url=location.origin+location.pathname+location.search+'#'+slug;
+  }
+  const s=typeof url==='string'?url:url.toString();
+  navigator.clipboard.writeText(s).then(()=>showToast('Board link copied')).catch(()=>showToast('Copy failed'));
 }
 
 function toggleCommandMode(){
   state.commandMode=!state.commandMode;
   applyLayoutClasses();
   saveState();
-  showToast(state.commandMode?'Command mode enabled':'Command mode disabled');
+  showToast(state.commandMode?'Comfort view on':'Comfort view off');
 }
 
 function applyLayoutClasses(){
@@ -1622,15 +2086,28 @@ function applyLayoutClasses(){
   root.classList.toggle('command-mode',!!state.commandMode);
 }
 
+function getPinnedObjective(){
+  const id=state.pinnedObjectiveId;
+  if(!id)return null;
+  const o=state.objectives.find(ob=>ob.id===id);
+  if(!o||o.done)return null;
+  return o;
+}
+
 function renderCommand(){
   document.getElementById('cmd-mission').textContent=state.command.mission;
   const blocker=state.objectives.find(o=>o.status==='blocked' && !o.done);
   document.getElementById('cmd-blocker').textContent=blocker?blocker.text:state.command.blocker;
+  const pinned=getPinnedObjective();
   const next=state.objectives.find(o=>!o.done);
-  document.getElementById('cmd-milestone').textContent=next?next.text:state.command.milestone;
+  const mile=document.getElementById('cmd-milestone');
+  const mileLbl=document.getElementById('cmd-milestone-label');
+  if(mile)mile.textContent=pinned?pinned.text:(next?next.text:state.command.milestone);
+  if(mileLbl)mileLbl.textContent=pinned?'Focus':'Next up';
   renderActiveUser();
   renderOverview();
   renderHeaderLive();
+  renderReadyToggles();
 }
 
 function renderOverview(){
@@ -1695,22 +2172,83 @@ function updateCloudPill(){
 
 function tickClock(){
   const el=document.getElementById('header-clock');
+  if(el){
+    const d=new Date();
+    el.textContent=d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }
+  renderSessionPulse();
+}
+
+function renderSessionPulse(){
+  const el=document.getElementById('header-session-pulse');
   if(!el)return;
-  const d=new Date();
-  el.textContent=d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const sm=state.sessionMeta||structuredClone(BOARD_TEMPLATES[templateKeyFromState()].sessionMeta);
+  const t0=sm.sessionStartAt;
+  if(!t0||typeof t0!=='number'||Number.isNaN(t0)){
+    el.textContent='';
+    el.classList.remove('live');
+    el.title='';
+    return;
+  }
+  const now=Date.now();
+  const liveWindowMs=4*3600*1000;
+  if(now<t0){
+    const sec=Math.max(0,Math.floor((t0-now)/1000));
+    const h=Math.floor(sec/3600);
+    const m=Math.floor((sec%3600)/60);
+    const s=sec%60;
+    const pad=n=>String(n).padStart(2,'0');
+    el.classList.remove('live');
+    el.title='Time until session start';
+    el.textContent=h>0?`⏱ ${h}:${pad(m)}:${pad(s)}`:`⏱ ${m}:${pad(s)}`;
+    return;
+  }
+  if(now<=t0+liveWindowMs){
+    el.classList.add('live');
+    el.title='Session window';
+    el.textContent='Live';
+    return;
+  }
+  el.textContent='';
+  el.classList.remove('live');
+  el.title='';
 }
 
 function renderObjectives(){
-  const list=state.objectives.map((o,i)=>{
+  const total=state.objectives.length;
+  const staggerOn=state.editingObjectiveIndex===null;
+  const pinIdx=state.pinnedObjectiveId!=null
+    ?state.objectives.findIndex(o=>o.id===state.pinnedObjectiveId&&!o.done)
+    :-1;
+  const displayIdx=pinIdx>=0
+    ?state.objectives.map((_,i)=>i).filter(i=>i!==pinIdx)
+    :state.objectives.map((_,i)=>i);
+  const listLen=displayIdx.length;
+  let spotlightHtml='';
+  if(pinIdx>=0){
+    const p=state.objectives[pinIdx];
+    spotlightHtml=`<div class="obj-spotlight">
+      <div class="obj-spotlight-label"><i class="ti ti-pin"></i> Focus</div>
+      <div class="obj-text" style="font-size:15px;color:var(--green);font-weight:600">${escapeHtml(p.text)}</div>
+      <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span class="obj-priority pri-${p.priority}">${p.priority.toUpperCase()}</span>
+        <span class="meta-pill">${String(p.status).toUpperCase()}</span>
+        <span class="obj-owner">Owner: ${escapeHtml(p.owner||'Unassigned')}</span>
+        <button type="button" class="btn btn-sm" onclick="togglePinObjective(${JSON.stringify(p.id)})">Unpin</button>
+      </div>
+    </div>`;
+  }
+  const list=displayIdx.map((i,j)=>{
+    const o=state.objectives[i];
     if(state.editingObjectiveIndex===i){
       let linkOpts='<option value="">— No linked objective —</option>';
-      state.objectives.forEach((ob,j)=>{
-        if(j===i)return;
-        const sel=o.blockedLinksTo===j?' selected':'';
-        const lab=(j+1)+'. '+escapeHtml(ob.text.length>68?ob.text.slice(0,68)+'…':ob.text);
-        linkOpts+=`<option value="${j}"${sel}>${lab}</option>`;
+      state.objectives.forEach((ob,idx)=>{
+        if(idx===i)return;
+        const sel=o.blockedLinksTo===idx?' selected':'';
+        const lab=(idx+1)+'. '+escapeHtml(ob.text.length>68?ob.text.slice(0,68)+'…':ob.text);
+        linkOpts+=`<option value="${idx}"${sel}>${lab}</option>`;
       });
-      return `<div class="obj-row">
+      return `<div class="obj-row obj-row-edit">
         <div class="obj-edit-row">
           <input type="text" id="edit-obj-text" value="${escapeHtml(o.text)}">
           <input type="text" id="edit-obj-owner" value="${escapeHtml(o.owner||'Unassigned')}">
@@ -1745,7 +2283,11 @@ function renderObjectives(){
       }
       blockedHtml=`<div class="obj-blocked-note">${inner}</div>`;
     }
-    return `<div class="obj-row">
+    const staggerMs=staggerOn&&listLen>1?Math.round((j/(listLen-1))*120):0;
+    const staggerClass=staggerOn?' obj-row-stagger':'';
+    const isPinned=!!(o.id&&state.pinnedObjectiveId===o.id&&!o.done);
+    const pinLabel=state.pinnedObjectiveId===o.id?'Unpin':'Pin';
+    return `<div class="obj-row${staggerClass}${isPinned?' is-pinned':''}" style="--obj-stagger:${staggerMs}ms">
       <div class="obj-check ${o.done?'done':''}" onclick="toggleObj(${i})" role="checkbox" aria-checked="${o.done?'true':'false'}" title="Toggle done"><i class="ti ti-check"></i></div>
       <div class="obj-main">
         <div class="obj-text ${o.done?'done':''}">${escapeHtml(o.text)}</div>
@@ -1758,12 +2300,18 @@ function renderObjectives(){
       </div>
       <span class="obj-priority pri-${o.priority}">${o.priority.toUpperCase()}</span>
       <div class="obj-actions">
+        <button class="btn btn-sm" onclick="togglePinObjective(${JSON.stringify(o.id)})" title="Show this first and in the summary strip">${pinLabel}</button>
         <button class="btn btn-sm" onclick="startObjectiveEdit(${i})" ${canObjective('edit')?'':'disabled'}>Edit</button>
         <button class="btn btn-sm btn-danger" onclick="removeObjective(${i})" ${canObjective('remove')?'':'disabled'}>Remove</button>
       </div>
     </div>`;
   }).join('');
-  document.getElementById('obj-list').innerHTML=list||'<div class="shortcut-hint">No objectives yet.</div>';
+  let body='';
+  if(spotlightHtml&&list)body=spotlightHtml+list;
+  else if(spotlightHtml&&!list)body=spotlightHtml+'<div class="shortcut-hint">Nothing else in the stack right now.</div>';
+  else if(list)body=list;
+  else body='<div class="shortcut-hint">No objectives yet.</div>';
+  document.getElementById('obj-list').innerHTML=body;
   document.getElementById('kpi-open-objectives').textContent=String(state.objectives.filter(o=>!o.done).length);
   renderOverview();
   renderUpNext();
@@ -1771,9 +2319,11 @@ function renderObjectives(){
 
 function toggleObj(i){
   if(!requireObjective('toggle'))return;
+  const oid=state.objectives[i]&&state.objectives[i].id;
   state.objectives[i].done=!state.objectives[i].done;
   state.objectives[i].status=state.objectives[i].done?'done':state.objectives[i].status;
   state.objectives[i].updatedAt=stamp();
+  if(state.objectives[i].done&&oid&&state.pinnedObjectiveId===oid)state.pinnedObjectiveId=null;
   saveState();
   renderObjectives();
   renderCommand();
@@ -1784,6 +2334,7 @@ function addObjective(){
   const text=document.getElementById('obj-text').value.trim();
   if(!text)return;
   state.objectives.push({
+    id:'obj_'+stamp()+'_'+Math.random().toString(36).slice(2,10),
     text,
     owner:document.getElementById('obj-owner').value.trim()||'Unassigned',
     priority:document.getElementById('obj-priority').value||'high',
@@ -1831,6 +2382,7 @@ function saveObjectiveEdit(i){
   }else state.objectives[i].blockedLinksTo=null;
   if(state.objectives[i].blockedLinksTo===i)state.objectives[i].blockedLinksTo=null;
   if(state.objectives[i].blockedLinksTo!=null&&(state.objectives[i].blockedLinksTo>=state.objectives.length||state.objectives[i].blockedLinksTo<0))state.objectives[i].blockedLinksTo=null;
+  if(state.objectives[i].done&&state.objectives[i].id&&state.pinnedObjectiveId===state.objectives[i].id)state.pinnedObjectiveId=null;
   state.editingObjectiveIndex=null;
   saveState();
   renderObjectives();
@@ -1838,8 +2390,19 @@ function saveObjectiveEdit(i){
   showToast('Objective updated');
 }
 
+function togglePinObjective(id){
+  if(!id)return;
+  state.pinnedObjectiveId=state.pinnedObjectiveId===id?null:id;
+  saveState();
+  renderObjectives();
+  renderCommand();
+  showToast(state.pinnedObjectiveId?'Focus pinned':'Focus cleared');
+}
+
 function removeObjective(i){
   if(!requireObjective('remove'))return;
+  const rid=state.objectives[i]&&state.objectives[i].id;
+  if(rid&&state.pinnedObjectiveId===rid)state.pinnedObjectiveId=null;
   state.objectives.splice(i,1);
   state.objectives.forEach(o=>{
     if(o.blockedLinksTo==null)return;
@@ -1856,13 +2419,13 @@ function renderActiveUser(){
   const sel=document.getElementById('active-user');
   if(!sel)return;
   if(!Array.isArray(state.users) || !state.users.length){
-    state.users=structuredClone(defaults.users);
+    state.users=structuredClone(BOARD_TEMPLATES[templateKeyFromState()].users);
     state.currentUserId=state.users[0].id;
   }
-  sel.innerHTML=state.users.map(u=>`<option value="${u.id}" ${u.id===state.currentUserId?'selected':''}>${u.name} (${u.role})</option>`).join('');
+  sel.innerHTML=state.users.map(u=>`<option value="${escapeHtml(u.id)}" ${u.id===state.currentUserId?'selected':''}>${escapeHtml(u.name)} (${escapeHtml(u.role)})</option>`).join('');
   const user=getCurrentUser();
   if(!user || !user.permissions || !user.permissions.objective){
-    state.users=structuredClone(defaults.users);
+    state.users=structuredClone(BOARD_TEMPLATES[templateKeyFromState()].users);
     state.currentUserId=state.users[0].id;
     saveLocalState();
     return renderActiveUser();
@@ -1877,11 +2440,20 @@ function setActiveUser(id){
   saveState();
   renderCommand();
   renderObjectives();
+  renderSquadNotes();
   showToast(`Switched to ${getCurrentUser().name}`);
 }
 
 function escapeHtml(v){
   return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function safeSupplyUrgency(v){
+  const x=String(v||'').toLowerCase();
+  return ['med','high','crit'].includes(x)?x:'med';
+}
+function safeSupplyStatus(v){
+  const x=String(v||'').toLowerCase();
+  return ['open','fulfilled'].includes(x)?x:'open';
 }
 
 function setCloudStatus(text,type=''){
@@ -2103,7 +2675,7 @@ function tryAutoJoinFromHash(){
   remote.accessKey=ak;
   persistRemoteConfig();
   populateCloudFields();
-  switchTab('admin');
+  switchTab('admin',true);
   setTimeout(()=>connectCloud(),300);
   return true;
 }
@@ -2128,16 +2700,18 @@ async function runCloudDiagnostics(){
 }
 
 function renderRoles(){
-  document.getElementById('roles-list').innerHTML=state.roles.map(r=>`
-    <div class="role-card">
-      <div class="role-icon">${r.icon}</div>
+  document.getElementById('roles-list').innerHTML=state.roles.map(r=>{
+    const st=['active','idle','offline'].includes(r.status)?r.status:'idle';
+    return `<div class="role-card">
+      <div class="role-icon">${escapeHtml(r.icon||'?')}</div>
       <div>
-        <div class="role-name">${r.name}</div>
-        <div class="role-player">> ${r.player}</div>
-        <div class="role-task">${r.task}</div>
+        <div class="role-name">${escapeHtml(r.name||'')}</div>
+        <div class="role-player">&gt; ${escapeHtml(r.player||'')}</div>
+        <div class="role-task">${escapeHtml(r.task||'')}</div>
       </div>
-      <span class="status-badge badge-${r.status}">${r.status}</span>
-    </div>`).join('');
+      <span class="status-badge badge-${st}">${escapeHtml(st)}</span>
+    </div>`;
+  }).join('');
 }
 
 function renderLocations(){
@@ -2184,18 +2758,22 @@ function renderRequests(){
     el.innerHTML='<div style="font-family:\'Share Tech Mono\',monospace;font-size:13px;color:#3a5a3a;padding:16px 0;text-align:center">// NO ACTIVE REQUESTS — POST ONE BELOW</div>';
     return;
   }
-  el.innerHTML=state.requests.map((r,i)=>`
+  el.innerHTML=state.requests.map((r,i)=>{
+    const u=safeSupplyUrgency(r.urgency);
+    const st=safeSupplyStatus(r.status);
+    return `
     <div class="req-item">
       <span style="font-size:18px">📥</span>
-      <div class="req-need">${r.need}</div>
+      <div class="req-need">${escapeHtml(r.need)}</div>
       <span style="font-size:10px;color:#5a8a5a;font-family:'Share Tech Mono',monospace">OFFER:</span>
-      <div class="req-offer">${r.offer}</div>
-      <div class="req-who">${r.who}</div>
-      <span class="obj-priority pri-${r.urgency}">${r.urgency.toUpperCase()}</span>
-      <span class="meta-pill">${r.status.toUpperCase()}</span>
+      <div class="req-offer">${escapeHtml(r.offer)}</div>
+      <div class="req-who">${escapeHtml(r.who)}</div>
+      <span class="obj-priority pri-${u}">${u.toUpperCase()}</span>
+      <span class="meta-pill">${st.toUpperCase()}</span>
       <span class="obj-updated">${timeLabel(r.updatedAt)}</span>
       <button class="remove-btn" onclick="removeReq(${i})" title="Mark fulfilled">×</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function addRequest(){
@@ -2261,29 +2839,32 @@ function setRecommended(id){
 }
 
 function renderModpacks(){
-  document.getElementById('modpacks-list').innerHTML=state.modpacks.map(m=>`
+  document.getElementById('modpacks-list').innerHTML=state.modpacks.map(m=>{
+    const idJs=JSON.stringify(m.id);
+    return `
     <div class="modpack-card ${m.rec?'recommended':''}">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px">
         <div>
           ${m.rec?'<span class="rec-badge">★ SQUAD RECOMMENDATION</span><br>':''}
-          <div class="modpack-name">${m.name}</div>
-          <div class="modpack-tag">${m.tag}</div>
+          <div class="modpack-name">${escapeHtml(m.name)}</div>
+          <div class="modpack-tag">${escapeHtml(m.tag)}</div>
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0;margin-top:4px">
-          ${!m.rec?`<button class="btn btn-sm" onclick="setRecommended('${m.id}')" title="Set as recommended">★ PICK</button>`:''}
-          <button class="btn btn-sm btn-danger" onclick="removeModpack('${m.id}')" title="Remove modpack">✕ REMOVE</button>
+          ${!m.rec?`<button class="btn btn-sm" onclick="setRecommended(${idJs})" title="Set as recommended">★ PICK</button>`:''}
+          <button class="btn btn-sm btn-danger" onclick="removeModpack(${idJs})" title="Remove modpack">✕ REMOVE</button>
         </div>
       </div>
-      <div class="modpack-desc">${m.desc}</div>
+      <div class="modpack-desc">${escapeHtml(m.desc)}</div>
       <div class="rating-row"><span class="rating-name">Complexity</span><div class="rating-bar"><div class="rating-fill fill-amber" style="width:${m.complexity}%"></div></div><span class="rating-num">${m.complexity}%</span></div>
       <div class="rating-row"><span class="rating-name">RPG Depth</span><div class="rating-bar"><div class="rating-fill fill-green" style="width:${m.rpg}%"></div></div><span class="rating-num">${m.rpg}%</span></div>
       <div class="rating-row"><span class="rating-name">Co-op Potential</span><div class="rating-bar"><div class="rating-fill fill-blue" style="width:${m.coop}%"></div></div><span class="rating-num">${m.coop}%</span></div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function renderVoteSelect(){
   const sel=document.getElementById('vote-select');
-  sel.innerHTML='<option value="">-- Cast your vote --</option>'+state.modpacks.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+  sel.innerHTML='<option value="">-- Cast your vote --</option>'+state.modpacks.map(m=>`<option value="${escapeHtml(String(m.id))}">${escapeHtml(m.name)}</option>`).join('');
 }
 
 function renderVotes(){
@@ -2291,8 +2872,9 @@ function renderVotes(){
   document.getElementById('vote-results').innerHTML=state.modpacks.map(m=>{
     const count=state.votes[m.id]||0;
     const pct=totalVotes?Math.round((count/totalVotes)*100):0;
+    const short=m.name.length>20?m.name.substring(0,18)+'…':m.name;
     return `<div class="vote-row">
-      <span class="vote-label">${m.name.length>20?m.name.substring(0,18)+'…':m.name}</span>
+      <span class="vote-label">${escapeHtml(short)}</span>
       <div class="vote-bar-wrap"><div class="vote-bar-fill" style="width:${pct}%"></div></div>
       <span class="vote-count">${count} vote${count!==1?'s':''}</span>
     </div>`;
@@ -2337,9 +2919,30 @@ function importPlan(ev){
   fr.readAsText(file);
 }
 
+function populateBoardTemplateSelect(){
+  const sel=document.getElementById('board-template-select');
+  if(!sel)return;
+  const cur=templateKeyFromState();
+  const order=['blank','minecraft'];
+  sel.innerHTML=order.map(k=>`<option value="${escapeHtml(k)}">${escapeHtml(boardTemplateLabel(k))}</option>`).join('');
+  sel.value=BOARD_TEMPLATE_KEYS.includes(cur)?cur:'blank';
+}
+
+function applySelectedBoardTemplate(){
+  const sel=document.getElementById('board-template-select');
+  const key=sel&&BOARD_TEMPLATE_KEYS.includes(sel.value)?sel.value:'blank';
+  const label=boardTemplateLabel(key);
+  if(!confirm('Replace this browser’s entire board with: '+label+'?\n\nIf cloud sync is on, the next push can overwrite other devices. This cannot be undone.'))return;
+  state=normalizeState({...structuredClone(BOARD_TEMPLATES[key]), boardTemplate:key});
+  saveState();
+  init();
+  showToast('Template: '+label);
+}
+
 function resetBoard(){
-  if(!confirm('Reset board to defaults? This cannot be undone.'))return;
-  state=structuredClone(defaults);
+  const k=templateKeyFromState();
+  if(!confirm('Reset this board to the '+boardTemplateLabel(k)+' template defaults? This cannot be undone.'))return;
+  state=normalizeState({...structuredClone(BOARD_TEMPLATES[k]), boardTemplate:k});
   saveState();
   init();
   showToast('Board reset');
@@ -2387,6 +2990,7 @@ function init(){
   applyLayoutClasses();
   populateBriefFields();
   populateSessionMeta();
+  populateBoardTemplateSelect();
   populateSitrep();
   initMissionCollapse();
   renderCommand();
@@ -2400,6 +3004,7 @@ function init(){
   renderCheckpoints();
   renderSquadNotes();
   updateCloudPill();
+  renderSessionPulse();
 }
 
 function boot(){
@@ -2407,6 +3012,8 @@ function boot(){
     applySavedTheme();
     document.addEventListener('keydown',e=>{
       if(e.key==='Escape'){
+        const w=document.getElementById('welcome-modal');
+        if(w&&w.classList.contains('is-open')){e.preventDefault();hideWelcomeModal();return;}
         const m=document.getElementById('cheatsheet-modal');
         if(m&&m.classList.contains('is-open')){e.preventDefault();toggleCheatsheet();return;}
         closeSideDrawer();
@@ -2417,8 +3024,11 @@ function boot(){
     tickClock();
     setInterval(tickClock,1000);
     init();
+    installTabBar();
     populateCallsignField();
     populateCloudFields();
+    applyContextTipVisibility();
+    maybeShowWelcomeOnBoot();
     setInterval(()=>{if(!document.hidden)renderPresenceLine();},60000);
     const sn=document.getElementById('sitrep-notes');
     if(sn)sn.addEventListener('input',queueSitrepSave);
@@ -2437,6 +3047,11 @@ function boot(){
       setCloudStatus('Cloud: local mode only (fill fields, then click Connect)');
       setDiagnostics(['Status: local mode','Fill Admin tab fields and click Connect Cloud.']);
     }
+    if(!joinedFromLink)applyTabFromHash();
+    window.addEventListener('hashchange',()=>{
+      if(joinHashActive())return;
+      applyTabFromHash();
+    });
   }catch(err){
     console.error('War Room boot failed:',err);
     const fallback=document.createElement('div');
